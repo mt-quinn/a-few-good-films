@@ -23,7 +23,12 @@ const ACTORS = [
   'Samuel L. Jackson', 'Kate Winslet', 'Brad Pitt', 'Cate Blanchett',
   'Jodie Foster', 'Anthony Hopkins', 'Daniel Day-Lewis', 'Christian Bale',
   'Tilda Swinton', 'Joaquin Phoenix', 'Frances McDormand', 'Philip Seymour Hoffman',
-  'Viola Davis', 'Amy Adams', 'Jeff Bridges', 'Gary Oldman', 'Julianne Moore'
+  'Viola Davis', 'Amy Adams', 'Jeff Bridges', 'Gary Oldman', 'Julianne Moore',
+  'Scarlett Johansson', 'Ryan Gosling', 'Ryan Reynolds', 'Emma Stone', 'Natalie Portman',
+  'Keanu Reeves', 'Sandra Bullock', 'Hugh Jackman', 'Anne Hathaway', 'Tom Cruise',
+  'Keira Knightley', 'Matt Damon', 'Ben Affleck', 'George Clooney', 'Emily Blunt',
+  'Michael Fassbender', 'Idris Elba', 'Mahershala Ali', 'Adam Driver', 'Robert Downey Jr.',
+  'Zendaya', 'Anya Taylor-Joy', 'Timothée Chalamet', 'Florence Pugh', 'Brie Larson'
 ];
 
 const GENRES = [
@@ -195,8 +200,8 @@ export function generatePrompts(): Prompt[] {
   const generatedPrompts: Prompt[] = [];
 
   // Add a balanced mix of prompt types for a 16-cell grid
-  shuffle(DIRECTORS).slice(0, 4).forEach(d => generatedPrompts.push(directorPrompt(d)));
-  shuffle(ACTORS).slice(0, 4).forEach(a => generatedPrompts.push(actorPrompt(a)));
+  shuffle(DIRECTORS).slice(0, 2).forEach(d => generatedPrompts.push(directorPrompt(d)));
+  shuffle(ACTORS).slice(0, 6).forEach(a => generatedPrompts.push(actorPrompt(a)));
   shuffle(GENRES).slice(0, 4).forEach(g => generatedPrompts.push(genrePrompt(g)));
   shuffle(DECADES).slice(0, 2).forEach(d => generatedPrompts.push(decadePrompt(d)));
   
