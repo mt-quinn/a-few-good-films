@@ -20,7 +20,7 @@ A daily movie guessing game.
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/a-few-good-films.git
+    git clone https://github.com/mt-quinn/a-few-good-films.git
     cd a-few-good-films
     ```
 2.  **Install dependencies:**
