@@ -16,16 +16,15 @@ app.use(express.json());
 
 let db;
 try {
-  const dbOptions = IS_VERCEL
-    ? { fileMustExist: true, readonly: true }
-    : { fileMustExist: true, readonly: false };
-  db = new Database(DB_PATH, dbOptions);
-  if (!IS_VERCEL) {
-    db.pragma('journal_mode = WAL');
-  }
+  const dbPath = process.env.IS_VERCEL ? path.resolve(__dirname, '../data/movies.db') : path.resolve(__dirname, '../../data/movies.db');
+  console.log(`[API] Connecting to DB at ${dbPath}`);
+  db = new Database(dbPath, {
+    readonly: !!process.env.IS_VERCEL,
+    fileMustExist: true,
+  });
+  console.log('[API] DB connection successful');
 } catch (err) {
-  console.error('Database open failed. Ensure ETL has created the DB at', DB_PATH);
-  process.exit(1);
+  console.error('[API] DB connection error:', err);
 }
 
 if (!IS_VERCEL) {
