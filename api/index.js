@@ -7,7 +7,6 @@ const axios = require('axios');
 const { generatePrompts, generateSinglePrompt } = require('./game');
 
 const IS_VERCEL = !!process.env.VERCEL;
-const DB_PATH = path.resolve(__dirname, '../data/movies.db');
 const app = express();
 const router = express.Router();
 
@@ -16,10 +15,10 @@ app.use(express.json());
 
 let db;
 try {
-  const dbPath = process.env.IS_VERCEL ? path.resolve(__dirname, '../data/movies.db') : path.resolve(__dirname, '../../data/movies.db');
+  const dbPath = path.resolve(__dirname, '../data/movies.db');
   console.log(`[API] Connecting to DB at ${dbPath}`);
   db = new Database(dbPath, {
-    readonly: !!process.env.IS_VERCEL,
+    readonly: IS_VERCEL,
     fileMustExist: true,
   });
   console.log('[API] DB connection successful');
@@ -320,9 +319,11 @@ router.get('/movie/:id', async (req, res) => {
 });
 
 const port = process.env.PORT || 5176;
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+if (!IS_VERCEL) {
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+}
 
 app.use('/api', router);
 module.exports = app;
