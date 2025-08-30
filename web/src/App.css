@@ -47,6 +47,8 @@ body {
 .counter { color: var(--muted); }
 .pill { background: var(--panel-2); border: 1px solid var(--border); padding: clamp(4px, 0.8vw, 6px) clamp(8px, 1.2vw, 10px); border-radius: 999px; box-shadow: var(--shadow); }
 .counterPanel { background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.45); color: #9ff2cd; padding: 6px 10px; border-radius: 10px; box-shadow: var(--shadow); display: inline-flex; align-items: center; gap: 8px; }
+.howToBtn { margin-left: 8px; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+.howToBtn:hover { background: #1b1f2a; }
 .pill.win { background: rgba(52, 211, 153, 0.15); border-color: rgba(52,211,153,0.35); color: #9ff2cd; }
 
 .searchWrap { position: relative; width: min(420px, 36vw); }
@@ -285,3 +287,28 @@ body {
     transform: scale(0.9);
   }
 }
+
+/* Modal */
+.overlayModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+}
+.modalCard {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: min(560px, 92vw);
+  padding: 18px 16px;
+  box-shadow: var(--shadow);
+}
+.modalCard h3 { margin: 0 0 8px; }
+.modalCard p { margin: 0 0 12px; line-height: 1.4; color: var(--muted); }
+.modalActions { display: flex; justify-content: flex-end; }
+.okBtn { background: var(--accent-blue); color: #fff; border: 0; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+.okBtn:hover { filter: brightness(1.05); }

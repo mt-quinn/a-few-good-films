@@ -33,6 +33,7 @@ function App() {
   const [gameState, setGameState] = useState<'playing' | 'gameOver'>('playing');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [copied, setCopied] = useState(false);
+  const [showHowTo, setShowHowTo] = useState(false);
   const [hoveredTip, setHoveredTip] = useState<null | (LogEntry & { x: number; y: number; anchorLeft: number })>(null);
   const appRef = useRef<HTMLDivElement | null>(null);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -335,6 +336,7 @@ function App() {
         </div>
         <div className="counterPanel">Score: <strong>{score}</strong></div>
         <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
+        <button className="howToBtn" onClick={() => setShowHowTo(true)}>HOW TO PLAY</button>
       </div>
 
       <div className="playArea">
@@ -459,6 +461,20 @@ function App() {
               return str;
             })()
           }</span></div>
+        </div>
+      )}
+
+      {showHowTo && (
+        <div className="overlayModal" role="dialog" aria-modal="true">
+          <div className="modalCard">
+            <h3>How to Play</h3>
+            <p>
+              You have ten guesses to check off as many boxes as possible! Checked boxes will be replaced with new prompts. Every box is worth 1 point, and one movie can check multiple boxes.
+            </p>
+            <div className="modalActions">
+              <button className="okBtn" onClick={() => setShowHowTo(false)}>OK</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
