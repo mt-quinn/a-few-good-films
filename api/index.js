@@ -13,7 +13,6 @@ const router = express.Router();
 
 app.use(cors());
 app.use(express.json());
-app.use(router);
 
 let db;
 try {
