@@ -1,10 +1,10 @@
 {
   "builds": [
     {
-      "src": "web/vite.config.js",
+      "src": "web/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "web/dist"
+        "distDir": "dist"
       }
     },
     {
@@ -14,12 +14,12 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/:match*",
       "destination": "/server/src/index.js"
     },
     {
-      "source": "/(.*)",
-      "destination": "/web/dist/index.html"
+      "source": "/:path*",
+      "destination": "/web/index.html"
     }
   ]
 }
