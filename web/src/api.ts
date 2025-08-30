@@ -1,9 +1,9 @@
 import type { TvdbMovieDetails, TvdbSearchItem } from './types';
 
-const API_BASE = import.meta.env.DEV ? 'http://localhost:5176' : '';
+const API_BASE = '/api';
 
 export async function searchMovies(query: string): Promise<TvdbSearchItem[]> {
-  const response = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}`);
+  const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
   if (!response.ok) return [];
   const data = await response.json();
   if (!data || !Array.isArray(data.items)) return [];
@@ -72,7 +72,7 @@ export async function getMovieDetails(tvdbId: string): Promise<TvdbMovieDetails 
 }
 
 export async function getDailyPrompts(): Promise<any> {
-  const response = await fetch(`${API_BASE}/api/daily-prompts`);
+  const response = await fetch(`${API_BASE}/daily-prompts`);
   if (!response.ok) {
     throw new Error('Failed to fetch daily prompts');
   }

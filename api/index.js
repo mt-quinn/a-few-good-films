@@ -13,6 +13,7 @@ const router = express.Router();
 
 app.use(cors());
 app.use(express.json());
+app.use(router);
 
 let db;
 try {
@@ -326,6 +327,7 @@ app.listen(port, () => {
 });
 
 app.use('/api', router);
+module.exports = app;
 
 // Helper to merge people arrays, normalizing keys
 function mergePeople(base, extra) {
