@@ -6,6 +6,7 @@ const fs = require('fs');
 const axios = require('axios');
 const { generatePrompts, generateSinglePrompt } = require('./game');
 
+const IS_VERCEL = !!process.env.VERCEL;
 const DB_PATH = path.resolve(__dirname, '../../data/movies.db');
 const app = express();
 app.use(cors());
@@ -13,16 +14,22 @@ app.use(express.json());
 
 let db;
 try {
-  db = new Database(DB_PATH, { fileMustExist: true, readonly: false });
-  db.pragma('journal_mode = WAL');
+  const dbOptions = IS_VERCEL
+    ? { fileMustExist: true, readonly: true }
+    : { fileMustExist: true, readonly: false };
+  db = new Database(DB_PATH, dbOptions);
+  if (!IS_VERCEL) {
+    db.pragma('journal_mode = WAL');
+  }
 } catch (err) {
   console.error('Database open failed. Ensure ETL has created the DB at', DB_PATH);
   process.exit(1);
 }
 
-// Ensure cache tables
-try {
-  db.exec(`
+if (!IS_VERCEL) {
+  // Ensure cache tables
+  try {
+    db.exec(`
     CREATE TABLE IF NOT EXISTS tvdb_search_cache (
       q TEXT PRIMARY KEY,
       json TEXT,
@@ -34,10 +41,11 @@ try {
       ts INTEGER
     );
   `);
-  // Clear search cache on startup to ensure fresh data during dev
-  db.exec(`DELETE FROM tvdb_search_cache;`);
-} catch (e) {
-  console.error('Failed to ensure cache tables', e);
+    // Clear search cache on startup to ensure fresh data during dev
+    db.exec(`DELETE FROM tvdb_search_cache;`);
+  } catch (e) {
+    console.error('Failed to ensure cache tables', e);
+  }
 }
 
 const TVDB_BASE = 'https://api4.thetvdb.com/v4';
@@ -188,15 +196,17 @@ app.get('/search', async (req, res) => {
   const q = (req.query.q || '').toString().trim();
   if (!q || q.length < 2) return res.json({ items: [] });
 
-  const cached = db.prepare('SELECT json FROM tvdb_search_cache WHERE q=?').get(q);
-  if (cached) {
-    try {
-      // The cached value is the raw TVDB response `data` object.
-      // We need to wrap it in a `payload` object with an `items` key for the client.
-      const data = JSON.parse(cached.json);
-      const payload = { items: (data && data.data) ? data.data : [] };
-      return res.json(payload);
-    } catch {}
+  if (!IS_VERCEL) {
+    const cached = db.prepare('SELECT json FROM tvdb_search_cache WHERE q=?').get(q);
+    if (cached) {
+      try {
+        // The cached value is the raw TVDB response `data` object.
+        // We need to wrap it in a `payload` object with an `items` key for the client.
+        const data = JSON.parse(cached.json);
+        const payload = { items: (data && data.data) ? data.data : [] };
+        return res.json(payload);
+      } catch { }
+    }
   }
 
   try {
@@ -210,8 +220,10 @@ app.get('/search', async (req, res) => {
       });
     }
     // Note: we cache the raw `data` from TVDB, not the `payload`
-    db.prepare('INSERT OR REPLACE INTO tvdb_search_cache(q,json,ts) VALUES(?,?,?)')
-      .run(q, JSON.stringify(data), Date.now());
+    if (!IS_VERCEL) {
+      db.prepare('INSERT OR REPLACE INTO tvdb_search_cache(q,json,ts) VALUES(?,?,?)')
+        .run(q, JSON.stringify(data), Date.now());
+    }
     const payload = { items: (data && data.data) ? data.data : [] };
     res.json(payload);
   } catch (e) {
@@ -224,18 +236,20 @@ app.get('/search', async (req, res) => {
 
 app.get('/movie/:id', async (req, res) => {
   const id = req.params.id; // TVDB movie id (number-like string)
-  const cached = db.prepare('SELECT json FROM tvdb_movie_cache WHERE id=?').get(id);
-  if (cached) {
-    try {
-      const obj = JSON.parse(cached.json);
-      const people = Array.isArray(obj.people) ? obj.people : [];
-      const hasDirector = people.some((p) => /director/i.test(p?.peopleType || '') || /director/i.test(p?.role || ''));
-      const hasActor = people.some((p) => /actor/i.test(p?.peopleType || ''));
-      if (hasDirector && hasActor) {
-        return res.json(obj);
-      }
-      // else fall through to refresh/enrich from TVDB
-    } catch {}
+  if (!IS_VERCEL) {
+    const cached = db.prepare('SELECT json FROM tvdb_movie_cache WHERE id=?').get(id);
+    if (cached) {
+      try {
+        const obj = JSON.parse(cached.json);
+        const people = Array.isArray(obj.people) ? obj.people : [];
+        const hasDirector = people.some((p) => /director/i.test(p?.peopleType || '') || /director/i.test(p?.role || ''));
+        const hasActor = people.some((p) => /actor/i.test(p?.peopleType || ''));
+        if (hasDirector && hasActor) {
+          return res.json(obj);
+        }
+        // else fall through to refresh/enrich from TVDB
+      } catch { }
+    }
   }
   try {
     // Ask explicitly for people via meta, per TVDB v4 docs
@@ -278,8 +292,10 @@ app.get('/movie/:id', async (req, res) => {
     // Extract poster URL
     payload.posterUrl = payload.image || payload.image_url || (payload.artworks && payload.artworks.find(a => a.type === 14 && a.language === 'eng')?.image) || null;
 
-    db.prepare('INSERT OR REPLACE INTO tvdb_movie_cache(id,json,ts) VALUES(?,?,?)')
-      .run(id, JSON.stringify(payload), Date.now());
+    if (!IS_VERCEL) {
+      db.prepare('INSERT OR REPLACE INTO tvdb_movie_cache(id,json,ts) VALUES(?,?,?)')
+        .run(id, JSON.stringify(payload), Date.now());
+    }
 
     // Sanitize payload to send to client
     const clientPayload = {
