@@ -34,6 +34,8 @@ function App() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
   const [hoveredTip, setHoveredTip] = useState<null | (LogEntry & { x: number; y: number; anchorLeft: number })>(null);
   const appRef = useRef<HTMLDivElement | null>(null);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +71,7 @@ function App() {
         setGuessesLeft(MAX_GUESSES);
         setScore(0);
         setGameState('playing');
+        setDebugMode(false);
       }
     };
 
@@ -77,7 +80,7 @@ function App() {
 
   // Save game state to localStorage whenever it changes
   useEffect(() => {
-    if (cells.length === 0) return; // Don't save empty initial state
+    if (cells.length === 0 || debugMode) return; // Don't save empty initial state or debug sessions
     const dailyKey = getDailyKey();
     const stateToSave = {
       cells,
@@ -87,7 +90,7 @@ function App() {
       gameState,
     };
     localStorage.setItem(dailyKey, JSON.stringify(stateToSave));
-  }, [cells, logs, guessesLeft, score, gameState]);
+  }, [cells, logs, guessesLeft, score, gameState, debugMode]);
 
   // Show How-To on first visit
   useEffect(() => {
@@ -214,8 +217,21 @@ function App() {
   useEffect(() => {
     if (guessesLeft <= 0 && gameState === 'playing') {
       setGameState('gameOver');
+      setShowGameOver(true);
     }
   }, [guessesLeft, gameState]);
+  const startDebugGame = useCallback(() => {
+    setDebugMode(true);
+    const prompts = generatePrompts();
+    setCells(generateBoard(prompts as Prompt[]));
+    setLogs([]);
+    setGuessesLeft(MAX_GUESSES);
+    setScore(0);
+    setGameState('playing');
+    setShowGameOver(false);
+    setQuery('');
+    setResults([]);
+  }, []);
 
   const onCopyShareLink = useCallback(async () => {
     try {
@@ -348,6 +364,9 @@ function App() {
         <div className="counterPanel">Score: <strong>{score}</strong></div>
         <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
         <button className="howToBtn" onClick={() => setShowHowTo(true)}>HOW TO PLAY</button>
+        {gameState === 'gameOver' && !showGameOver && (
+          <button className="howToBtn" onClick={() => setShowGameOver(true)}>VIEW SUMMARY</button>
+        )}
       </div>
 
       <div className="playArea">
@@ -374,12 +393,16 @@ function App() {
               );
             })}
           </div>
-          {gameState === 'gameOver' && (
+          {showGameOver && (
             <div className="gameOverOverlay">
               <div className="gameOverContent">
                 <h2>Game Over!</h2>
                 <p>Your final score is: <strong>{score}</strong></p>
-                <button onClick={onCopyShareLink}>{copied ? 'Link Copied!' : 'Copy Share Link'}</button>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button onClick={onCopyShareLink}>{copied ? 'Link Copied!' : 'Copy Share Link'}</button>
+                  <button onClick={() => setShowGameOver(false)}>CLOSE</button>
+                  <button onClick={startDebugGame}>Play Again (Debug)</button>
+                </div>
               </div>
             </div>
           )}
