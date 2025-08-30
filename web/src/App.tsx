@@ -32,6 +32,7 @@ function App() {
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'gameOver'>('playing');
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [copied, setCopied] = useState(false);
   const [hoveredTip, setHoveredTip] = useState<null | (LogEntry & { x: number; y: number; anchorLeft: number })>(null);
   const appRef = useRef<HTMLDivElement | null>(null);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -204,6 +205,32 @@ function App() {
     }
   }, [guessesLeft, gameState]);
 
+  const onCopyShareLink = useCallback(async () => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('score', String(score));
+      const link = url.toString();
+      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        // Use Web Share API on mobile if available
+        await navigator.share({ title: 'A Few Good Films', text: `I scored ${score} points!`, url: link });
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        // Fallback copy
+        const ta = document.createElement('textarea');
+        ta.value = link;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {}
+  }, [score]);
+
   const onInputKeyDown = useCallback(async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || submitting || gameState === 'gameOver') return;
     const top = results[0];
@@ -265,6 +292,14 @@ function App() {
 
   return (
     <div className="app" ref={appRef}>
+      {(() => {
+        const params = new URLSearchParams(window.location.search);
+        const shared = params.get('score');
+        if (!shared) return null;
+        return (
+          <div className="shareNotice">Shared score: <strong>{Number(shared)}</strong></div>
+        );
+      })()}
       <div className="toolbar" ref={toolbarRef}>
         <div className="title">A Few Good Films</div>
         <div className="toolbarCenter">
@@ -328,6 +363,7 @@ function App() {
               <div className="gameOverContent">
                 <h2>Game Over!</h2>
                 <p>Your final score is: <strong>{score}</strong></p>
+                <button onClick={onCopyShareLink}>{copied ? 'Link Copied!' : 'Copy Share Link'}</button>
               </div>
             </div>
           )}

@@ -25,6 +25,7 @@ body {
 }
 
 .app { width: fit-content; max-width: 96vw; margin: 12px auto; padding: clamp(12px, 2vw, 20px); }
+.shareNotice { background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.4); color: #aaf1d2; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: var(--shadow); }
 
 .toolbar { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; }
 .toolbarCenter { display: flex; justify-content: center; }
