@@ -9,6 +9,8 @@ const { generatePrompts, generateSinglePrompt } = require('./game');
 const IS_VERCEL = !!process.env.VERCEL;
 const DB_PATH = path.resolve(__dirname, '../data/movies.db');
 const app = express();
+const router = express.Router();
+
 app.use(cors());
 app.use(express.json());
 
@@ -122,16 +124,11 @@ const tv = axios.create({ baseURL: TVDB_BASE, timeout: 12000 });
   }
 })();
 
-app.get('/health', (req, res) => {
+router.get('/health', (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/', (req, res) => {
-  res.json({ ok: true, message: 'A Few Good Films API', endpoints: ['/health', '/search?q=Inception', '/movie/:id'] });
-});
-app.get('/favicon.ico', (_req, res) => res.status(204).end());
-
-app.get('/api/daily-prompts', (req, res) => {
+router.get('/daily-prompts', (req, res) => {
   const date = new Date();
   const seed = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
   const prompts = generatePrompts(seed);
@@ -139,7 +136,7 @@ app.get('/api/daily-prompts', (req, res) => {
 });
 
 // TVDB raw proxy endpoints for debugging in the browser
-app.get('/tvdb/search', async (req, res) => {
+router.get('/tvdb/search', async (req, res) => {
   try {
     const { data } = await tvdbRequestWithRefresh('GET', `/search`, { params: req.query });
     res.json(data);
@@ -147,7 +144,7 @@ app.get('/tvdb/search', async (req, res) => {
     res.status(e?.response?.status || 500).json(e?.response?.data || { error: String(e?.message || e) });
   }
 });
-app.get('/tvdb/movies/:id/extended', async (req, res) => {
+router.get('/tvdb/movies/:id/extended', async (req, res) => {
   try {
     const { id } = req.params;
     const { data } = await tvdbRequestWithRefresh('GET', `/movies/${id}/extended`, { params: req.query });
@@ -156,7 +153,7 @@ app.get('/tvdb/movies/:id/extended', async (req, res) => {
     res.status(e?.response?.status || 500).json(e?.response?.data || { error: String(e?.message || e) });
   }
 });
-app.get('/tvdb/movies/:id/people', async (req, res) => {
+router.get('/tvdb/movies/:id/people', async (req, res) => {
   try {
     const { id } = req.params;
     const { data } = await tvdbRequestWithRefresh('GET', `/movies/${id}/people`, { params: req.query });
@@ -166,7 +163,7 @@ app.get('/tvdb/movies/:id/people', async (req, res) => {
   }
 });
 
-app.get('/search-sqlite', (req, res) => {
+router.get('/search-sqlite', (req, res) => {
   const q = (req.query.q || '').toString().trim();
   if (!q) return res.json({ items: [] });
   let rows = [];
@@ -192,7 +189,7 @@ app.get('/search-sqlite', (req, res) => {
   res.json({ items: rows });
 });
 
-app.get('/search', async (req, res) => {
+router.get('/search', async (req, res) => {
   const q = (req.query.q || '').toString().trim();
   if (!q || q.length < 2) return res.json({ items: [] });
 
@@ -234,7 +231,7 @@ app.get('/search', async (req, res) => {
   }
 });
 
-app.get('/movie/:id', async (req, res) => {
+router.get('/movie/:id', async (req, res) => {
   const id = req.params.id; // TVDB movie id (number-like string)
   if (!IS_VERCEL) {
     const cached = db.prepare('SELECT json FROM tvdb_movie_cache WHERE id=?').get(id);
@@ -327,6 +324,8 @@ const port = process.env.PORT || 5176;
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
+
+app.use('/api', router);
 
 // Helper to merge people arrays, normalizing keys
 function mergePeople(base, extra) {
