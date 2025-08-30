@@ -30,7 +30,7 @@ dist-ssr
 .env.production.local
 
 # Optional files
-/api/src/etl/api key.txt
-/api/src/etl/pin.txt
-/api/src/etl/token.txt
-/api/data/
+/api/etl/api key.txt
+/api/etl/pin.txt
+/api/etl/token.txt
+/data/

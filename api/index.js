@@ -7,7 +7,7 @@ const axios = require('axios');
 const { generatePrompts, generateSinglePrompt } = require('./game');
 
 const IS_VERCEL = !!process.env.VERCEL;
-const DB_PATH = path.resolve(__dirname, '../../data/movies.db');
+const DB_PATH = path.resolve(__dirname, '../data/movies.db');
 const app = express();
 app.use(cors());
 app.use(express.json());
