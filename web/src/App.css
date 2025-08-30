@@ -204,6 +204,26 @@ body {
   .logPanel { order: 2; max-height: 40vh; }
 }
 
+/* Mobile layout overhaul */
+@media (max-width: 640px) {
+  html, body, #root { height: auto; min-height: 100%; }
+  .app { width: 100%; max-width: 100%; padding: 12px; margin: 0 auto; }
+  .toolbar { position: sticky; top: 0; z-index: 1000; background: rgba(17,19,26,0.9); backdrop-filter: blur(6px); padding: 10px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .title { font-size: 18px; }
+  .counterPanel { font-size: 12px; padding: 4px 8px; }
+  .toolbarCenter { width: 100%; }
+  .searchWrap { width: 100%; }
+  .searchInput { padding: 12px; font-size: 16px; }
+  .clearBtn { padding: 10px 12px; }
+  .results { max-height: 40vh; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .cell { border-radius: 8px; }
+  .promptPanel { -webkit-line-clamp: 2; line-clamp: 2; }
+  .logPanel { max-height: 36vh; }
+  .logCard { grid-template-columns: 36px 1fr; gap: 8px; }
+  .logPoster { width: 36px; height: 54px; }
+}
+
 .gameOverOverlay {
   position: absolute;
   top: 0;
