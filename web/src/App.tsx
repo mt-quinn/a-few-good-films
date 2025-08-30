@@ -45,7 +45,9 @@ function App() {
   const [cellSize, setCellSize] = useState<number>(140);
   const sharedScore = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    const v = Number(params.get('score'));
+    const raw = params.get('score');
+    if (raw == null || raw.trim() === '') return null;
+    const v = Number(raw);
     return Number.isFinite(v) ? v : null;
   }, []);
 
