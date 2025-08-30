@@ -1,0 +1,17 @@
+{
+  "name": "a-few-good-films",
+  "version": "1.0.0",
+  "description": "A daily movie guessing game.",
+  "main": "server/src/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix web\"",
+    "install-all": "npm install && npm install --prefix server && npm install --prefix web",
+    "build": "npm run build --prefix web"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

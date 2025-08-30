@@ -1,0 +1,25 @@
+{
+  "builds": [
+    {
+      "src": "web/vite.config.js",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "web/dist"
+      }
+    },
+    {
+      "src": "server/src/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/src/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/web/dist/index.html"
+    }
+  ]
+}
