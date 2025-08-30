@@ -260,7 +260,7 @@ function App() {
       const viewportW = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth);
       const gapPlay = playArea ? parseFloat(getComputedStyle(playArea).gap || '10') : 10;
       const logW = logPanel ? logPanel.offsetWidth : 0;
-      const vw = Math.max(0, viewportW - logW - gapPlay - 24);
+      const vw = Math.max(0, viewportW - (logPanel ? 0 : 0) - gapPlay - 16);
       const vh = window.innerHeight;
       const appCS = app ? getComputedStyle(app) : null;
       const appPadTop = appCS ? parseFloat(appCS.paddingTop || '0') : 0;
@@ -278,12 +278,12 @@ function App() {
       const paddingAndMargins = appPadTop + appPadBottom + toolbarMB + gridMT;
       const safety = 0;
       const availableH = vh - toolbarH - searchH - resultsH - paddingAndMargins - safety;
-      // Columns switch to 2 on small screens; keep rows at 4
-      const cols = window.innerWidth <= 640 ? 2 : 4;
+      // Always render a 4x4 board; size cells to fit viewport
+      const cols = 4;
       const rows = 4;
       const maxByWidth = Math.floor((vw - gap * (cols - 1)) / cols);
       const maxByHeight = Math.floor((availableH - gap * (rows - 1)) / rows);
-      const size = Math.max(60, Math.min(maxByWidth, maxByHeight)) - 1; // subtract 1px to avoid rounding overflow
+      const size = Math.max(64, Math.min(maxByWidth, maxByHeight));
       setCellSize(size);
     }
     recalc();

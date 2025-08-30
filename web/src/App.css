@@ -65,11 +65,13 @@ body {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, var(--cell-size, 120px));
+  grid-auto-rows: var(--cell-size, 120px);
+  gap: 6px;
   position: relative;
+  justify-content: center;
 }
-.cell { position: relative; border: 1px solid var(--border); border-radius: clamp(8px, 1.2vw, 12px); background: var(--panel); overflow: hidden; }
+.cell { position: relative; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); overflow: hidden; }
 .cell { border: 1px solid var(--border); }
 .cellContent { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; }
 .cellContent.empty { display: flex; align-items: center; justify-content: center; }
@@ -94,7 +96,7 @@ body {
 
 .posterOverlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.0) 60%, rgba(0,0,0,0.6)); }
 
-@media (max-width: 860px) { .grid { gap: 6px; } .cell { min-height: clamp(68px, 18vw, 120px); } }
+@media (max-width: 860px) { .grid { gap: 4px; } }
 @media (max-width: 520px) { .toolbar { flex-wrap: wrap; } .counter { width: 100%; text-align: right; } }
 
 /* Play area layout */
@@ -216,7 +218,7 @@ body {
   .searchInput { padding: 12px; font-size: 16px; }
   .clearBtn { padding: 10px 12px; }
   .results { max-height: 40vh; }
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .grid { grid-template-columns: repeat(4, var(--cell-size, 120px)); grid-auto-rows: var(--cell-size, 120px); gap: 3px; }
   .cell { border-radius: 8px; }
   .promptPanel { -webkit-line-clamp: 2; line-clamp: 2; }
   .logPanel { max-height: 36vh; }
