@@ -43,6 +43,11 @@ function App() {
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [cellSize, setCellSize] = useState<number>(140);
+  const sharedScore = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const v = Number(params.get('score'));
+    return Number.isFinite(v) ? v : null;
+  }, []);
 
   // Initial setup
   useEffect(() => {
@@ -411,6 +416,13 @@ function App() {
               <div className="gameOverContent">
                 <h2>Game Over!</h2>
                 <p>Your final score is: <strong>{score}</strong></p>
+                {sharedScore != null && (
+                  <p>
+                    {score === sharedScore && 'You matched the shared score.'}
+                    {score > sharedScore && `You beat the shared score by ${score - sharedScore}.`}
+                    {score < sharedScore && `You were ${sharedScore - score} short of the shared score.`}
+                  </p>
+                )}
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button onClick={onCopyShareLink}>{copied ? 'Link Copied!' : 'Copy Share Link'}</button>
                   <button onClick={() => setShowGameOver(false)}>CLOSE</button>
