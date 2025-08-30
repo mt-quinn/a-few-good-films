@@ -197,13 +197,26 @@ function App() {
       // After another delay (for fade-out), replace them with new prompts
       setTimeout(() => {
         setCells(currentCells => {
-          const existingPrompts = currentCells.map(c => c.prompt);
-          return currentCells.map(cell => {
+          const currentPrompts = currentCells.map(c => c.prompt);
+          const pickNextPrompt = (existingList: Cell['prompt'][], directorCount: number) => {
+            const existingIds = new Set(existingList.map(p => p.id));
+            const available = allPossiblePrompts.filter(p => !existingIds.has(p.id));
+            const isDirector = (p: any) => typeof p?.id === 'string' && p.id.startsWith('director-');
+            let pool = directorCount >= 3 ? available.filter(p => !isDirector(p)) : available;
+            if (pool.length === 0) pool = available.length > 0 ? available : allPossiblePrompts;
+            return pool[Math.floor(Math.random() * pool.length)];
+          };
+          let directorCount = currentPrompts.filter(p => p.id.startsWith('director-')).length;
+          const nextCells = currentCells.map(cell => {
             if (cell.clearing) {
-              return { prompt: generateSinglePrompt(existingPrompts) };
+              const nextPrompt = pickNextPrompt(currentPrompts, directorCount);
+              currentPrompts.push(nextPrompt);
+              if (nextPrompt.id.startsWith('director-')) directorCount += 1;
+              return { prompt: nextPrompt };
             }
             return cell;
           });
+          return nextCells;
         });
         setSubmitting(false); // Re-enable submissions
       }, 3000);

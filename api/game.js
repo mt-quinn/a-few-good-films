@@ -135,7 +135,7 @@ function generatePrompts(seed) {
   const generatedPrompts = [];
 
   // Add a balanced mix of prompt types for a 16-cell grid
-  shuffle([...DIRECTORS], rng).slice(0, 2).forEach(d => generatedPrompts.push(directorPrompt(d)));
+  shuffle([...DIRECTORS], rng).slice(0, 3).forEach(d => generatedPrompts.push(directorPrompt(d)));
   shuffle([...ACTORS], rng).slice(0, 6).forEach(a => generatedPrompts.push(actorPrompt(a)));
   shuffle([...GENRES], rng).slice(0, 4).forEach(g => generatedPrompts.push(genrePrompt(g)));
   shuffle([...DECADES], rng).slice(0, 2).forEach(d => generatedPrompts.push(decadePrompt(d)));
@@ -144,6 +144,21 @@ function generatePrompts(seed) {
   const remaining = 16 - generatedPrompts.length;
   generatedPrompts.push(...shuffle([...staticPrompts], rng).slice(0, remaining));
 
+  // Enforce max 3 director prompts at start
+  let directorsOnBoard = generatedPrompts.filter(p => p.id.startsWith('director-')).length;
+  if (directorsOnBoard > 3) {
+    const trimmed = [];
+    let keepDirectors = 3;
+    for (const p of shuffle([...generatedPrompts], rng)) {
+      if (p.id.startsWith('director-')) {
+        if (keepDirectors > 0) { trimmed.push(p); keepDirectors--; }
+      } else {
+        trimmed.push(p);
+      }
+      if (trimmed.length === generatedPrompts.length) break;
+    }
+    return shuffle(trimmed.slice(0, 16), rng);
+  }
   return shuffle(generatedPrompts, rng);
 }
 
