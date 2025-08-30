@@ -89,6 +89,17 @@ function App() {
     localStorage.setItem(dailyKey, JSON.stringify(stateToSave));
   }, [cells, logs, guessesLeft, score, gameState]);
 
+  // Show How-To on first visit
+  useEffect(() => {
+    try {
+      const key = 'afgf-howto-shown-v1';
+      const seen = localStorage.getItem(key);
+      if (!seen) {
+        setShowHowTo(true);
+      }
+    } catch {}
+  }, []);
+
 
   const debounceRef = useRef<number | null>(null);
   const doSearch = useCallback((q: string) => {
@@ -472,7 +483,7 @@ function App() {
               You have ten guesses to check off as many boxes as possible! Checked boxes will be replaced with new prompts. Every box is worth 1 point, and one movie can check multiple boxes.
             </p>
             <div className="modalActions">
-              <button className="okBtn" onClick={() => setShowHowTo(false)}>OK</button>
+              <button className="okBtn" onClick={() => { try { localStorage.setItem('afgf-howto-shown-v1', '1'); } catch {} setShowHowTo(false); }}>OK</button>
             </div>
           </div>
         </div>
