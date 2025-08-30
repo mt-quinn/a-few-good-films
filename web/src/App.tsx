@@ -278,8 +278,11 @@ function App() {
       const paddingAndMargins = appPadTop + appPadBottom + toolbarMB + gridMT;
       const safety = 0;
       const availableH = vh - toolbarH - searchH - resultsH - paddingAndMargins - safety;
-      const maxByWidth = Math.floor((vw - gap * 3) / 4);
-      const maxByHeight = Math.floor((availableH - gap * 3) / 4);
+      // Columns switch to 2 on small screens; keep rows at 4
+      const cols = window.innerWidth <= 640 ? 2 : 4;
+      const rows = 4;
+      const maxByWidth = Math.floor((vw - gap * (cols - 1)) / cols);
+      const maxByHeight = Math.floor((availableH - gap * (rows - 1)) / rows);
       const size = Math.max(60, Math.min(maxByWidth, maxByHeight)) - 1; // subtract 1px to avoid rounding overflow
       setCellSize(size);
     }
