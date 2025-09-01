@@ -22,7 +22,6 @@ const DIRECTORS = [
 ];
 
 const ACTORS = [
-  // Classics & Legends
   'Tom Hanks', 'Leonardo DiCaprio', 'Denzel Washington', 'Meryl Streep',
   'Robert De Niro', 'Al Pacino', 'Jack Nicholson', 'Morgan Freeman',
   'Samuel L. Jackson', 'Kate Winslet', 'Brad Pitt', 'Cate Blanchett',
@@ -37,8 +36,6 @@ const ACTORS = [
   'Arnold Schwarzenegger', 'Sylvester Stallone', 'Bruce Willis', 'Mel Gibson',
   'Kevin Costner', 'Russell Crowe', 'Bill Murray', 'Eddie Murphy', 'Jim Carrey',
   'Steve Martin', 'John Travolta', 'Kurt Russell', 'Christopher Walken',
-
-  // Modern Superstars
   'Scarlett Johansson', 'Ryan Gosling', 'Ryan Reynolds', 'Emma Stone',
   'Hugh Jackman', 'Anne Hathaway', 'Keira Knightley', 'Ben Affleck',
   'Emily Blunt', 'Michael Fassbender', 'Idris Elba', 'Mahershala Ali',
@@ -58,15 +55,13 @@ const ACTORS = [
   'Benicio del Toro', 'Forest Whitaker', 'Jamie Foxx', 'Jon Hamm', 'Elisabeth Moss',
   'Oscar Isaac', 'John Boyega', 'Jake Gyllenhaal', 'Heath Ledger',
   'Bradley Cooper', 'Vin Diesel', 'Jason Statham', 'Jackie Chan',
-
-  // Rising Stars
   'Zendaya', 'Anya Taylor-Joy', 'Timothée Chalamet', 'Florence Pugh', 'Brie Larson'
 ];
 
 const GENRES = [
   'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary',
   'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller',
-  'Western'
+  'Western', 'Musical', 'War', 'History', 'Family', 'Sport'
 ];
 
 const DECADES = [1970, 1980, 1990, 2000, 2010];
@@ -159,7 +154,26 @@ const decadePrompt = (decade: number): Prompt => ({
 });
 
 const staticPrompts: Prompt[] = [
+  // Year
+  { id: 'year-before-2000', label: 'Released before 2000', test: (m) => getYear(m) < 2000 },
+  { id: 'year-after-2000', label: 'Released after 2000', test: (m) => getYear(m) > 2000 },
+  { id: 'year-after-2020', label: 'Released after 2020', test: (m) => getYear(m) > 2020 },
+  { id: 'year-before-1970', label: 'Released before 1970', test: (m) => getYear(m) < 1970 },
+  
   // Title
+  { id: 'title-possessive', label: `Title is possessive ('s)`, test: (_, title) => /'s\b/.test(title) },
+  { id: 'title-long-5', label: 'Title is 5 words or longer', test: (_, title) => title.trim().split(/\s+/g).length >= 5 },
+  { id: 'title-alliterative', label: 'Alliterative title', test: (_, title) => {
+    const commonWords = new Set(['a', 'an', 'the', 'in', 'on', 'of', 'for', 'to', 'with', 'and', 'or', 'but']);
+    const words = title.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => !commonWords.has(w) && w.length > 1);
+    if (words.length < 2) return false;
+    const firstLetters = words.map(w => w[0]);
+    const letterCounts = firstLetters.reduce((acc, letter) => {
+      acc[letter] = (acc[letter] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.values(letterCounts).some(count => count >= 2);
+  }},
   { id: 'starts-the', label: 'Title starts with "The"', test: (_, title) => /^the\b/i.test(title) },
   { id: 'one-word', label: 'One-word title', test: (_, title) => title.trim().split(/\s+/g).length === 1 },
   { id: 'has-number', label: 'Title contains a number', test: (_, title) => {
@@ -231,6 +245,16 @@ export const allPossiblePrompts = [
 
 // --- Main Generation Logic ---
 
+const promptCategories = [
+  { weight: 2, source: DIRECTORS.map(directorPrompt) },
+  { weight: 5, source: ACTORS.map(actorPrompt) },
+  { weight: 4, source: GENRES.map(genrePrompt) },
+  { weight: 2, source: DECADES.map(decadePrompt) },
+  { weight: 3, source: staticPrompts }
+];
+
+const totalWeight = promptCategories.reduce((sum, cat) => sum + cat.weight, 0);
+
 // Helper to shuffle an array
 function shuffle<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
@@ -242,36 +266,37 @@ function shuffle<T>(array: T[]): T[] {
 
 export function generatePrompts(): Prompt[] {
   const generatedPrompts: Prompt[] = [];
-
-  // Add a balanced mix of prompt types for a 16-cell grid
-  shuffle(DIRECTORS).slice(0, 2).forEach(d => generatedPrompts.push(directorPrompt(d)));
-  shuffle(ACTORS).slice(0, 6).forEach(a => generatedPrompts.push(actorPrompt(a)));
-  shuffle(GENRES).slice(0, 4).forEach(g => generatedPrompts.push(genrePrompt(g)));
-  shuffle(DECADES).slice(0, 2).forEach(d => generatedPrompts.push(decadePrompt(d)));
-  
-  // Add static prompts and ensure we have 16 total
-  const remaining = 16 - generatedPrompts.length;
-  generatedPrompts.push(...shuffle(staticPrompts).slice(0, remaining));
-
+  for (let i = 0; i < 16; i++) {
+    const newPrompt = generateSinglePrompt(generatedPrompts);
+    generatedPrompts.push(newPrompt);
+  }
   return shuffle(generatedPrompts);
 }
 
 export function generateSinglePrompt(existingPrompts: Prompt[]): Prompt {
-  const allPossiblePrompts = [
-    ...DIRECTORS.map(directorPrompt),
-    ...ACTORS.map(actorPrompt),
-    ...GENRES.map(genrePrompt),
-    ...DECADES.map(decadePrompt),
-    ...staticPrompts
-  ];
-
   const existingIds = new Set(existingPrompts.map(p => p.id));
-  const availablePrompts = allPossiblePrompts.filter(p => !existingIds.has(p.id));
 
-  if (availablePrompts.length === 0) {
-    // Fallback in case we run out of unique prompts, though unlikely.
-    return shuffle(allPossiblePrompts)[0];
+  // Loop indefinitely until a valid, unused prompt is found.
+  // This is safe because the total number of prompts far exceeds the 16 on the board.
+  while (true) {
+    const randomWeight = Math.random() * totalWeight;
+    let currentWeight = 0;
+
+    for (const category of promptCategories) {
+      currentWeight += category.weight;
+      if (randomWeight < currentWeight) {
+        // This is the chosen category. Now find an available prompt within it.
+        const availableInCategory = category.source.filter(p => !existingIds.has(p.id));
+
+        if (availableInCategory.length > 0) {
+          // Pick a random prompt from the available ones in this category and return it.
+          const randomIndex = Math.floor(Math.random() * availableInCategory.length);
+          return availableInCategory[randomIndex];
+        }
+
+        // If no prompts were available, break the inner loop to try picking another category.
+        break;
+      }
+    }
   }
-
-  return shuffle(availablePrompts)[0];
 }

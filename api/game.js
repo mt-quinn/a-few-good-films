@@ -59,7 +59,7 @@ const ACTORS = [
 const GENRES = [
   'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary',
   'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller',
-  'Western'
+  'Western', 'Musical', 'War', 'History', 'Family', 'Sport'
 ];
 
 const DECADES = [1970, 1980, 1990, 2000, 2010];
@@ -127,7 +127,16 @@ const decadePrompt = (decade) => ({
 });
 
 const staticPrompts = [
+  // Year
+  { id: 'year-before-2000', label: 'Released before 2000' },
+  { id: 'year-after-2000', label: 'Released after 2000' },
+  { id: 'year-after-2020', label: 'Released after 2020' },
+  { id: 'year-before-1970', label: 'Released before 1970' },
+  
   // Title
+  { id: 'title-possessive', label: `Title is possessive ('s)` },
+  { id: 'title-long-5', label: 'Title is 5 words or longer' },
+  { id: 'title-alliterative', label: 'Alliterative title' },
   { id: 'starts-the', label: 'Title starts with "The"' },
   { id: 'one-word', label: 'One-word title' },
   { id: 'has-number', label: 'Title contains a number' },
@@ -159,6 +168,16 @@ const staticPrompts = [
 
 // --- Main Generation Logic ---
 
+const promptCategories = [
+  { weight: 2, source: DIRECTORS.map(directorPrompt) },
+  { weight: 5, source: ACTORS.map(actorPrompt) },
+  { weight: 4, source: GENRES.map(genrePrompt) },
+  { weight: 2, source: DECADES.map(decadePrompt) },
+  { weight: 3, source: staticPrompts }
+];
+
+const totalWeight = promptCategories.reduce((sum, cat) => sum + cat.weight, 0);
+
 // Helper to shuffle an array
 function shuffle(array, rng) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -172,53 +191,39 @@ function generatePrompts(seed) {
   const rng = seedrandom(seed);
   const generatedPrompts = [];
 
-  // Add a balanced mix of prompt types for a 16-cell grid
-  shuffle([...DIRECTORS], rng).slice(0, 3).forEach(d => generatedPrompts.push(directorPrompt(d)));
-  shuffle([...ACTORS], rng).slice(0, 6).forEach(a => generatedPrompts.push(actorPrompt(a)));
-  shuffle([...GENRES], rng).slice(0, 4).forEach(g => generatedPrompts.push(genrePrompt(g)));
-  shuffle([...DECADES], rng).slice(0, 2).forEach(d => generatedPrompts.push(decadePrompt(d)));
-  
-  // Add static prompts and ensure we have 16 total
-  const remaining = 16 - generatedPrompts.length;
-  generatedPrompts.push(...shuffle([...staticPrompts], rng).slice(0, remaining));
-
-  // Enforce max 3 director prompts at start
-  let directorsOnBoard = generatedPrompts.filter(p => p.id.startsWith('director-')).length;
-  if (directorsOnBoard > 3) {
-    const trimmed = [];
-    let keepDirectors = 3;
-    for (const p of shuffle([...generatedPrompts], rng)) {
-      if (p.id.startsWith('director-')) {
-        if (keepDirectors > 0) { trimmed.push(p); keepDirectors--; }
-      } else {
-        trimmed.push(p);
-      }
-      if (trimmed.length === generatedPrompts.length) break;
-    }
-    return shuffle(trimmed.slice(0, 16), rng);
+  for (let i = 0; i < 16; i++) {
+    const newPrompt = generateSinglePrompt(generatedPrompts, rng);
+    generatedPrompts.push(newPrompt);
   }
+
   return shuffle(generatedPrompts, rng);
 }
 
-function generateSinglePrompt(existingPrompts, seed) {
-    const rng = seedrandom(seed);
-  const allPossiblePrompts = [
-    ...DIRECTORS.map(directorPrompt),
-    ...ACTORS.map(actorPrompt),
-    ...GENRES.map(genrePrompt),
-    ...DECADES.map(decadePrompt),
-    ...staticPrompts
-  ];
-
+function generateSinglePrompt(existingPrompts, rng) {
   const existingIds = new Set(existingPrompts.map(p => p.id));
-  const availablePrompts = allPossiblePrompts.filter(p => !existingIds.has(p.id));
 
-  if (availablePrompts.length === 0) {
-    // Fallback in case we run out of unique prompts, though unlikely.
-    return shuffle(allPossiblePrompts, rng)[0];
+  // Loop indefinitely until a valid, unused prompt is found.
+  while (true) {
+    const randomWeight = rng() * totalWeight;
+    let currentWeight = 0;
+
+    for (const category of promptCategories) {
+      currentWeight += category.weight;
+      if (randomWeight < currentWeight) {
+        // This is the chosen category.
+        const availableInCategory = category.source.filter(p => !existingIds.has(p.id));
+
+        if (availableInCategory.length > 0) {
+          // Pick a random prompt from the available ones in this category and return it.
+          const randomIndex = Math.floor(rng() * availableInCategory.length);
+          return availableInCategory[randomIndex];
+        }
+
+        // If no prompts were available, break to try another category.
+        break;
+      }
+    }
   }
-
-  return shuffle(availablePrompts, rng)[0];
 }
 
 module.exports = { generatePrompts, generateSinglePrompt };
