@@ -80,4 +80,19 @@ export async function getDailyPrompts(): Promise<{seed: string, prompts: Prompt[
   return response.json();
 }
 
+export type PersonLookup = { name: string; imageUrl: string | null; id: number | string | null };
+
+export async function getPersonByName(name: string): Promise<PersonLookup | null> {
+  const q = name.trim();
+  if (!q) return null;
+  try {
+    const res = await fetch(`${API_BASE}/person?name=${encodeURIComponent(q)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data as PersonLookup;
+  } catch {
+    return null;
+  }
+}
+
 

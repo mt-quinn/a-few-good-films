@@ -16,17 +16,23 @@ app.use(express.json());
 let db;
 try {
   const dbPath = path.resolve(__dirname, '../data/movies.db');
-  console.log(`[API] Connecting to DB at ${dbPath}`);
-  db = new Database(dbPath, {
-    readonly: IS_VERCEL,
-    fileMustExist: true,
-  });
-  console.log('[API] DB connection successful');
+  if (fs.existsSync(dbPath)) {
+    console.log(`[API] Connecting to DB at ${dbPath}`);
+    db = new Database(dbPath, {
+      readonly: IS_VERCEL,
+      fileMustExist: true,
+    });
+    console.log('[API] DB connection successful');
+  } else {
+    console.warn(`[API] DB not found at ${dbPath}. Running without local SQLite features.`);
+    db = null;
+  }
 } catch (err) {
   console.error('[API] DB connection error:', err);
+  db = null;
 }
 
-if (!IS_VERCEL) {
+if (!IS_VERCEL && db) {
   // Ensure cache tables
   try {
     db.exec(`
@@ -40,9 +46,16 @@ if (!IS_VERCEL) {
       json TEXT,
       ts INTEGER
     );
+    CREATE TABLE IF NOT EXISTS tvdb_person_cache (
+      name TEXT PRIMARY KEY,
+      json TEXT,
+      ts INTEGER
+    );
   `);
     // Clear search cache on startup to ensure fresh data during dev
     db.exec(`DELETE FROM tvdb_search_cache;`);
+    // Clear person cache as well to avoid stale null image entries during dev
+    db.exec(`DELETE FROM tvdb_person_cache;`);
   } catch (e) {
     console.error('Failed to ensure cache tables', e);
   }
@@ -161,7 +174,62 @@ router.get('/tvdb/movies/:id/people', async (req, res) => {
   }
 });
 
+// Lookup a person's primary image by name, with caching in dev
+router.get('/person', async (req, res) => {
+  try {
+    const name = (req.query.name || '').toString().trim();
+    if (!name) return res.json({ name: '', imageUrl: null, id: null });
+
+    if (!IS_VERCEL && db) {
+      const cached = db.prepare('SELECT json FROM tvdb_person_cache WHERE name=?').get(name);
+      if (cached) {
+        try {
+          const obj = JSON.parse(cached.json);
+          // If cached record has a valid image, return it; otherwise fall through to refresh
+          if (obj && obj.imageUrl) return res.json(obj);
+        } catch {}
+      }
+    }
+
+    // Try TVDB search for people; attempt multiple types for compatibility
+    async function trySearch(params) {
+      const r = await tvdbRequestWithRefresh('GET', '/search', { params });
+      return r?.data || {};
+    }
+
+    let data = await trySearch({ query: name, type: 'people', limit: 10 }).catch(() => null);
+    if (!data || !Array.isArray(data.data) || data.data.length === 0) {
+      data = await trySearch({ query: name, type: 'person', limit: 10 }).catch(() => null);
+    }
+    if (!data || !Array.isArray(data.data)) {
+      data = await trySearch({ query: name, limit: 10 }).catch(() => null);
+    }
+
+    const items = Array.isArray(data?.data) ? data.data : [];
+    const normName = (s) => (s || '').toString().trim().toLowerCase();
+    const desired = normName(name);
+    let hit = items.find((it) => normName(it?.name || it?.translations?.eng) === desired && (it?.type === 'people' || it?.recordType === 'person' || it?.type === 'person'))
+           || items.find((it) => (it?.type === 'people' || it?.recordType === 'person' || it?.type === 'person'))
+           || items[0];
+
+    const imageUrl = hit?.image_url || hit?.image || null;
+    const payload = { name, imageUrl, id: hit?.id || hit?.tvdb_id || null };
+
+    if (!IS_VERCEL && db) {
+      db.prepare('INSERT OR REPLACE INTO tvdb_person_cache(name,json,ts) VALUES(?,?,?)')
+        .run(name, JSON.stringify(payload), Date.now());
+    }
+
+    res.json(payload);
+  } catch (e) {
+    const status = e?.response?.status || (e?.message?.includes('TVDB_APIKEY_missing') ? 401 : 502);
+    const hint = e?.message === 'TVDB_APIKEY_missing' ? 'Set TVDB_APIKEY env or create src/etl/api key.txt' : undefined;
+    res.status(status).json({ error: 'tvdb_person_failed', hint, message: String(e?.message || e) });
+  }
+});
+
 router.get('/search-sqlite', (req, res) => {
+  if (!db) return res.json({ items: [] });
   const q = (req.query.q || '').toString().trim();
   if (!q) return res.json({ items: [] });
   let rows = [];
@@ -191,7 +259,7 @@ router.get('/search', async (req, res) => {
   const q = (req.query.q || '').toString().trim();
   if (!q || q.length < 2) return res.json({ items: [] });
 
-  if (!IS_VERCEL) {
+  if (!IS_VERCEL && db) {
     const cached = db.prepare('SELECT json FROM tvdb_search_cache WHERE q=?').get(q);
     if (cached) {
       try {
@@ -215,7 +283,7 @@ router.get('/search', async (req, res) => {
       });
     }
     // Note: we cache the raw `data` from TVDB, not the `payload`
-    if (!IS_VERCEL) {
+    if (!IS_VERCEL && db) {
       db.prepare('INSERT OR REPLACE INTO tvdb_search_cache(q,json,ts) VALUES(?,?,?)')
         .run(q, JSON.stringify(data), Date.now());
     }
@@ -231,7 +299,7 @@ router.get('/search', async (req, res) => {
 
 router.get('/movie/:id', async (req, res) => {
   const id = req.params.id; // TVDB movie id (number-like string)
-  if (!IS_VERCEL) {
+  if (!IS_VERCEL && db) {
     const cached = db.prepare('SELECT json FROM tvdb_movie_cache WHERE id=?').get(id);
     if (cached) {
       try {
@@ -287,7 +355,7 @@ router.get('/movie/:id', async (req, res) => {
     // Extract poster URL
     payload.posterUrl = payload.image || payload.image_url || (payload.artworks && payload.artworks.find(a => a.type === 14 && a.language === 'eng')?.image) || null;
 
-    if (!IS_VERCEL) {
+    if (!IS_VERCEL && db) {
       db.prepare('INSERT OR REPLACE INTO tvdb_movie_cache(id,json,ts) VALUES(?,?,?)')
         .run(id, JSON.stringify(payload), Date.now());
     }

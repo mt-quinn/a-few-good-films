@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import './App.css'
-import { searchMovies, getMovieDetails, getDailyPrompts } from './api'
+import { searchMovies, getMovieDetails, getDailyPrompts, getPersonByName, type PersonLookup } from './api'
 import { generatePrompts, generateSinglePrompt, allPossiblePrompts } from './prompts'
 import type { Prompt } from './prompts';
 import type { Cell, TvdbMovieDetails, LogEntry, TvdbSearchItem } from './types'
@@ -25,6 +25,8 @@ function getDailyKey() {
 
 function App() {
   const [cells, setCells] = useState<Cell[]>([]);
+  const [actorImages, setActorImages] = useState<Record<string, string | null>>({});
+  const [dimmedActorCells, setDimmedActorCells] = useState<Record<number, boolean>>({});
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TvdbSearchItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +39,12 @@ function App() {
   const [showGameOver, setShowGameOver] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [hoveredTip, setHoveredTip] = useState<null | (LogEntry & { x: number; y: number; anchorLeft: number })>(null);
+  const tipRef = useRef<HTMLDivElement | null>(null);
+  const [tipPos, setTipPos] = useState<null | { left: number; top: number; width: number }>(null);
+  const isTouchDevice = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
+  }, []);
   const appRef = useRef<HTMLDivElement | null>(null);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
@@ -244,6 +252,57 @@ function App() {
     }
   }, [guessesLeft, gameState]);
 
+  // Keep tooltip within viewport by measuring after render
+  useLayoutEffect(() => {
+    if (!hoveredTip || !tipRef.current) { setTipPos(null); return; }
+    const w = Math.min(460, window.innerWidth - 24);
+    // Defer to ensure DOM has dimensions
+    const raf = window.requestAnimationFrame(() => {
+      const rect = tipRef.current ? tipRef.current.getBoundingClientRect() : { height: 220 } as any;
+      const h = rect.height || 220;
+      let left = hoveredTip.anchorLeft - w;
+      if (left < 12) left = 12;
+      const maxLeft = Math.max(12, window.innerWidth - w - 12);
+      if (left > maxLeft) left = maxLeft;
+      let top = hoveredTip.y;
+      const maxTop = Math.max(12, window.innerHeight - h - 12);
+      if (top > maxTop) top = maxTop;
+      if (top < 12) top = 12;
+      setTipPos({ left, top, width: w });
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [hoveredTip]);
+
+  // Recompute tooltip position on resize/scroll
+  useEffect(() => {
+    function onWinChange() {
+      if (!hoveredTip) return;
+      // trigger re-layout effect
+      setTipPos(null);
+      setTimeout(() => setTipPos((p) => p), 0);
+    }
+    window.addEventListener('resize', onWinChange);
+    window.addEventListener('scroll', onWinChange, true);
+    return () => {
+      window.removeEventListener('resize', onWinChange);
+      window.removeEventListener('scroll', onWinChange, true);
+    };
+  }, [hoveredTip]);
+
+  // Dismiss tooltip on outside tap for touch devices
+  useEffect(() => {
+    if (!isTouchDevice) return;
+    function onDocClick(e: MouseEvent) {
+      const tipEl = tipRef.current;
+      if (tipEl && e.target instanceof Node && tipEl.contains(e.target)) return;
+      const logEl = document.querySelector('.logPanel') as HTMLElement | null;
+      if (logEl && e.target instanceof Node && logEl.contains(e.target)) return;
+      setHoveredTip(null);
+    }
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [isTouchDevice]);
+
   // This function is not currently used but is kept for a potential future "reroll prompt" feature.
   // To enable it, a UI element (e.g., a button on each cell) would need to be added.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -263,6 +322,8 @@ function App() {
     setDebugMode(true);
     const prompts = generatePrompts();
     setCells(generateBoard(prompts as Prompt[]));
+    setActorImages({});
+    setDimmedActorCells({});
     setLogs([]);
     setGuessesLeft(MAX_GUESSES);
     setScore(0);
@@ -415,8 +476,35 @@ function App() {
               const poster = cell.filledBy?.posterUrl;
               const isFilled = !!cell.filledBy;
               const isClearing = !!cell.clearing;
+              // For unsolved actor prompts, show a faint actor image as background hint
+              let hintImg: string | undefined;
+              if (!isFilled && /^actor-/.test(cell.prompt.id)) {
+                const actorName = cell.prompt.label.replace(/^Stars\s+/i, '');
+                const img = actorImages[actorName];
+                if (img) hintImg = img;
+                // trigger fetch if missing and not already requested
+                if (img === undefined) {
+                  (async () => {
+                    const info: PersonLookup | null = await getPersonByName(actorName);
+                    setActorImages(prev => ({ ...prev, [actorName]: info?.imageUrl || null }));
+                  })();
+                }
+              }
+              const isActorHint = !isFilled && /^actor-/.test(cell.prompt.id);
+              const isTouch = typeof window !== 'undefined' && (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
+              const isDim = isActorHint && (isTouch ? !!dimmedActorCells[idx] : false);
               return (
-                <div key={idx} className={`cell ${isClearing ? 'clearing' : ''}`} style={{ width: cellSize, height: cellSize, backgroundImage: poster ? `url(${poster})` : undefined, backgroundSize: poster ? 'cover' : undefined, backgroundPosition: 'center' }}>
+                <div
+                  key={idx}
+                  className={`cell ${isClearing ? 'clearing' : ''} ${isActorHint ? 'actorHintCell' : ''} ${isDim ? 'dim' : ''}`}
+                  style={{ width: cellSize, height: cellSize, backgroundImage: poster ? `url(${poster})` : undefined, backgroundSize: poster ? 'cover' : undefined, backgroundPosition: 'center' }}
+                  onClick={() => {
+                    if (isActorHint && isTouch) {
+                      setDimmedActorCells(prev => ({ ...prev, [idx]: !prev[idx] }));
+                    }
+                  }}
+                >
+                  {!isFilled && hintImg && <div className="hintOverlay" style={{ backgroundImage: `url(${hintImg})` }} />}
                   <div className={isFilled ? 'cellContent filled' : 'cellContent empty'}>
                     {isFilled ? (
                       <>
@@ -463,13 +551,24 @@ function App() {
               <div
                 key={`${entry.id}-${entry.timestamp}`}
                 className="logItem"
+                onMouseLeave={() => { if (!isTouchDevice) setHoveredTip(null); }}
                 onMouseEnter={(e) => {
+                  if (isTouchDevice) return;
                   const rowRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const logEl = document.querySelector('.logPanel') as HTMLElement | null;
                   const logLeft = logEl ? logEl.getBoundingClientRect().left : rowRect.left;
                   setHoveredTip({ ...entry, x: rowRect.right, y: rowRect.top, anchorLeft: logLeft });
                 }}
-                onMouseLeave={() => setHoveredTip(null)}
+                onClick={(e) => {
+                  if (!isTouchDevice) return;
+                  const rowRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                  const logEl = document.querySelector('.logPanel') as HTMLElement | null;
+                  const logLeft = logEl ? logEl.getBoundingClientRect().left : rowRect.left;
+                  setHoveredTip((prev) => {
+                    if (prev && prev.id === entry.id && prev.timestamp === entry.timestamp) return null;
+                    return { ...entry, x: rowRect.right, y: rowRect.top, anchorLeft: logLeft };
+                  });
+                }}
               >
                 <div className="logCard">
                   <div className="logPosterWrap">
@@ -485,24 +584,12 @@ function App() {
       </div>
       {hoveredTip && (
         <div
+          ref={tipRef}
           className="tipFloating"
           style={{
             position: 'fixed',
-            left: (() => {
-              const w = Math.min(460, window.innerWidth - 24);
-              // Align tooltip's right edge with the log's left edge by default
-              let lx = hoveredTip.anchorLeft - w;
-              // If that would push off the left of the viewport, clamp to padding
-              if (lx < 12) lx = 12;
-              return lx;
-            })(),
-            top: (() => {
-              const h = 220; // approximate; height grows with content but we clamp below
-              let ty = hoveredTip.y;
-              if (ty + h > window.innerHeight - 12) ty = window.innerHeight - h - 12;
-              if (ty < 12) ty = 12;
-              return ty;
-            })(),
+            left: tipPos ? tipPos.left : Math.max(12, hoveredTip.anchorLeft - Math.min(460, window.innerWidth - 24)),
+            top: tipPos ? tipPos.top : Math.max(12, Math.min(hoveredTip.y, window.innerHeight - 12 - 220)),
             maxWidth: Math.min(460, window.innerWidth - 24),
             maxHeight: Math.min(520, window.innerHeight - 24),
             overflow: 'auto',
