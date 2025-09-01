@@ -276,27 +276,43 @@ export function generatePrompts(): Prompt[] {
 export function generateSinglePrompt(existingPrompts: Prompt[]): Prompt {
   const existingIds = new Set(existingPrompts.map(p => p.id));
 
-  // Loop indefinitely until a valid, unused prompt is found.
-  // This is safe because the total number of prompts far exceeds the 16 on the board.
-  while (true) {
-    const randomWeight = Math.random() * totalWeight;
-    let currentWeight = 0;
+  // 1. Get the full list of available prompts for each category
+  const availableByCategory = [
+    { name: 'Static', prompts: staticPrompts.filter(p => !existingIds.has(p.id)), tiebreaker: 1 },
+    { name: 'Genres', prompts: GENRES.map(genrePrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 2 },
+    { name: 'Actors', prompts: ACTORS.map(actorPrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 3 },
+    { name: 'Directors', prompts: DIRECTORS.map(directorPrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 4 },
+    { name: 'Decades', prompts: DECADES.map(decadePrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 5 }
+  ].filter(cat => cat.prompts.length > 0); // Only consider categories with available prompts
 
-    for (const category of promptCategories) {
-      currentWeight += category.weight;
-      if (randomWeight < currentWeight) {
-        // This is the chosen category. Now find an available prompt within it.
-        const availableInCategory = category.source.filter(p => !existingIds.has(p.id));
+  // 2. Count the current number of prompts from each category on the board
+  const staticPromptIds = new Set(staticPrompts.map(p => p.id));
+  const counts = {
+    Static: existingPrompts.filter(p => staticPromptIds.has(p.id)).length,
+    Genres: existingPrompts.filter(p => p.id.startsWith('genre-')).length,
+    Actors: existingPrompts.filter(p => p.id.startsWith('actor-')).length,
+    Directors: existingPrompts.filter(p => p.id.startsWith('director-')).length,
+    Decades: existingPrompts.filter(p => p.id.startsWith('year-') && p.id.endsWith('s')).length,
+  };
 
-        if (availableInCategory.length > 0) {
-          // Pick a random prompt from the available ones in this category and return it.
-          const randomIndex = Math.floor(Math.random() * availableInCategory.length);
-          return availableInCategory[randomIndex];
-        }
+  // 3. Sort the available categories to find the best one to pick from
+  availableByCategory.sort((a, b) => {
+    const countA = counts[a.name as keyof typeof counts];
+    const countB = counts[b.name as keyof typeof counts];
 
-        // If no prompts were available, break the inner loop to try picking another category.
-        break;
-      }
+    // Primary sort: by the number of prompts currently on the board (ascending)
+    if (countA !== countB) {
+      return countA - countB;
     }
-  }
+
+    // Secondary sort: by the tiebreaker priority
+    return a.tiebreaker - b.tiebreaker;
+  });
+
+  // 4. The best category to pick from is the first one in the sorted list
+  const chosenCategory = availableByCategory[0];
+
+  // 5. Pick a random prompt from that chosen category
+  const randomIndex = Math.floor(Math.random() * chosenCategory.prompts.length);
+  return chosenCategory.prompts[randomIndex];
 }
