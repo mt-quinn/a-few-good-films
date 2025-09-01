@@ -1,3 +1,4 @@
+import seedrandom from 'seedrandom';
 import type { TvdbMovieDetails } from './types';
 import { parseMoney } from './utils';
 
@@ -253,7 +254,7 @@ const promptCategories = [
   { weight: 3, source: staticPrompts }
 ];
 
-const totalWeight = promptCategories.reduce((sum, cat) => sum + cat.weight, 0);
+// const totalWeight = promptCategories.reduce((sum, cat) => sum + cat.weight, 0);
 
 // Helper to shuffle an array
 function shuffle<T>(array: T[]): T[] {
@@ -266,14 +267,17 @@ function shuffle<T>(array: T[]): T[] {
 
 export function generatePrompts(): Prompt[] {
   const generatedPrompts: Prompt[] = [];
+  // Use a stable seed for this generation run so UI doesn't re-render differently.
+  const seed = `${new Date().toISOString().split('T')[0]}`;
   for (let i = 0; i < 16; i++) {
-    const newPrompt = generateSinglePrompt(generatedPrompts);
+    const newPrompt = generateSinglePrompt(generatedPrompts, seed, i);
     generatedPrompts.push(newPrompt);
   }
   return shuffle(generatedPrompts);
 }
 
-export function generateSinglePrompt(existingPrompts: Prompt[]): Prompt {
+export function generateSinglePrompt(existingPrompts: Prompt[], seed: string, rerollIndex: number): Prompt {
+  const rng = seedrandom(seed + '-reroll-' + rerollIndex);
   const existingIds = new Set(existingPrompts.map(p => p.id));
 
   // 1. Get the full list of available prompts for each category
@@ -313,6 +317,6 @@ export function generateSinglePrompt(existingPrompts: Prompt[]): Prompt {
   const chosenCategory = availableByCategory[0];
 
   // 5. Pick a random prompt from that chosen category
-  const randomIndex = Math.floor(Math.random() * chosenCategory.prompts.length);
+  const randomIndex = Math.floor(rng() * chosenCategory.prompts.length);
   return chosenCategory.prompts[randomIndex];
 }

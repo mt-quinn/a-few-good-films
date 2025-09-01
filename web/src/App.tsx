@@ -50,6 +50,8 @@ function App() {
     const v = Number(raw);
     return Number.isFinite(v) ? v : null;
   }, []);
+  const [dailySeed, setDailySeed] = useState<string>('');
+  const [rerollCount, setRerollCount] = useState<number>(0);
 
   // Initial setup
   useEffect(() => {
@@ -58,7 +60,7 @@ function App() {
       const savedState = localStorage.getItem(dailyKey);
 
       if (savedState) {
-        const { cells, logs, guessesLeft, score, gameState } = JSON.parse(savedState);
+        const { cells, logs, guessesLeft, score, gameState, dailySeed, rerollCount } = JSON.parse(savedState);
         // We need to re-hydrate the prompts with their `test` functions
         const hydratedCells = cells.map((cell: Cell) => ({
           ...cell,
@@ -69,16 +71,20 @@ function App() {
         setGuessesLeft(guessesLeft);
         setScore(score);
         setGameState(gameState);
+        setDailySeed(dailySeed || '');
+        setRerollCount(rerollCount || 0);
       } else {
         // No saved state for today, fetch a new game
-        const dailyPrompts = await getDailyPrompts();
-        const hydratedPrompts = dailyPrompts.map((p: { id: string }) => promptsById.get(p.id));
+        const { seed, prompts } = await getDailyPrompts();
+        const hydratedPrompts = prompts.map((p: { id: string }) => promptsById.get(p.id));
         setCells(generateBoard(hydratedPrompts as Prompt[]));
         setLogs([]);
         setGuessesLeft(MAX_GUESSES);
         setScore(0);
         setGameState('playing');
         setDebugMode(false);
+        setDailySeed(seed || '');
+        setRerollCount(0);
       }
     };
 
@@ -95,9 +101,11 @@ function App() {
       guessesLeft,
       score,
       gameState,
+      dailySeed,
+      rerollCount,
     };
     localStorage.setItem(dailyKey, JSON.stringify(stateToSave));
-  }, [cells, logs, guessesLeft, score, gameState, debugMode]);
+  }, [cells, logs, guessesLeft, score, gameState, debugMode, dailySeed, rerollCount]);
 
   // Show How-To on first visit
   useEffect(() => {
@@ -204,25 +212,20 @@ function App() {
       // After another delay (for fade-out), replace them with new prompts
       setTimeout(() => {
         setCells(currentCells => {
-          const currentPrompts = currentCells.map(c => c.prompt);
-          const pickNextPrompt = (existingList: Cell['prompt'][], directorCount: number) => {
-            const existingIds = new Set(existingList.map(p => p.id));
-            const available = allPossiblePrompts.filter(p => !existingIds.has(p.id));
-            const isDirector = (p: any) => typeof p?.id === 'string' && p.id.startsWith('director-');
-            let pool = directorCount >= 3 ? available.filter(p => !isDirector(p)) : available;
-            if (pool.length === 0) pool = available.length > 0 ? available : allPossiblePrompts;
-            return pool[Math.floor(Math.random() * pool.length)];
-          };
-          let directorCount = currentPrompts.filter(p => p.id.startsWith('director-')).length;
+          let currentPrompts = currentCells.map(c => c.prompt);
+          let updatedRerollCount = rerollCount;
+          
           const nextCells = currentCells.map(cell => {
             if (cell.clearing) {
-              const nextPrompt = pickNextPrompt(currentPrompts, directorCount);
-              currentPrompts.push(nextPrompt);
-              if (nextPrompt.id.startsWith('director-')) directorCount += 1;
-              return { prompt: nextPrompt };
+              const newPrompt = generateSinglePrompt(currentPrompts, dailySeed, updatedRerollCount);
+              currentPrompts.push(newPrompt);
+              updatedRerollCount++;
+              return { prompt: newPrompt };
             }
             return cell;
           });
+
+          setRerollCount(updatedRerollCount);
           return nextCells;
         });
         setSubmitting(false); // Re-enable submissions
@@ -232,7 +235,7 @@ function App() {
       console.error("Error applying movie:", error);
       setSubmitting(false);
     }
-  }, [cells, logs]);
+  }, [cells, logs, dailySeed, rerollCount]);
 
   useEffect(() => {
     if (guessesLeft <= 0 && gameState === 'playing') {
@@ -240,6 +243,22 @@ function App() {
       setShowGameOver(true);
     }
   }, [guessesLeft, gameState]);
+
+  // This function is not currently used but is kept for a potential future "reroll prompt" feature.
+  // To enable it, a UI element (e.g., a button on each cell) would need to be added.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const replacePrompt = (index: number) => {
+    if (guessesLeft > 1) { // Example cost
+      const currentPrompts = cells.map(c => c.prompt);
+      const newPrompt = generateSinglePrompt(currentPrompts, dailySeed, rerollCount);
+      const newCells = [...cells];
+      newCells[index] = { prompt: newPrompt };
+      setCells(newCells);
+      setRerollCount(rerollCount + 1);
+      setGuessesLeft(guessesLeft - 1); // Example cost
+    }
+  };
+
   const startDebugGame = useCallback(() => {
     setDebugMode(true);
     const prompts = generatePrompts();
@@ -307,7 +326,7 @@ function App() {
       const logPanel = playArea?.querySelector('.logPanel') as HTMLElement | null;
       const viewportW = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth);
       const gapPlay = playArea ? parseFloat(getComputedStyle(playArea).gap || '10') : 10;
-      const logW = logPanel ? logPanel.offsetWidth : 0;
+      // const logW = logPanel ? logPanel.offsetWidth : 0;
       const vw = Math.max(0, viewportW - (logPanel ? 0 : 0) - gapPlay - 16);
       const vh = window.innerHeight;
       const appCS = app ? getComputedStyle(app) : null;
