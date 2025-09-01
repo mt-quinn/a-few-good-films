@@ -141,7 +141,7 @@ const actorPrompt = (actor: string): Prompt => ({
 const genrePrompt = (genre: string): Prompt => ({
   id: `genre-${genre.toLowerCase().replace(/\s+/g, '-')}`,
   label: `Genre: ${genre}`,
-  test: (m) => (m.genres || []).some(g => new RegExp(genre.replace('Sci-Fi', '(Science\\s*Fiction|Sci[-\\s]*Fi)'), 'i').test(g))
+  test: (m) => (m.genres || []).some(g => new RegExp(genre.replace('Sci-Fi', '(Science\\s*Fiction|Sci[-\\s]*Fi)').replace('Animation', 'Animation|Anime'), 'i').test(g))
 });
 
 const decadePrompt = (decade: number): Prompt => ({
