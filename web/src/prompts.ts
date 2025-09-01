@@ -165,7 +165,7 @@ const staticPrompts: Prompt[] = [
   { id: 'title-long-5', label: 'Title is 5 words or longer', test: (_, title) => title.trim().split(/\s+/g).length >= 5 },
   { id: 'title-alliterative', label: 'Alliterative title', test: (_, title) => {
     const commonWords = new Set(['a', 'an', 'the', 'in', 'on', 'of', 'for', 'to', 'with', 'and', 'or', 'but']);
-    const words = title.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => !commonWords.has(w) && w.length > 1);
+    const words = title.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => !commonWords.has(w) && w.length >= 1);
     if (words.length < 2) return false;
     const firstLetters = words.map(w => w[0]);
     const letterCounts = firstLetters.reduce((acc, letter) => {
