@@ -22,16 +22,44 @@ const DIRECTORS = [
 ];
 
 const ACTORS = [
+  // Classics & Legends
   'Tom Hanks', 'Leonardo DiCaprio', 'Denzel Washington', 'Meryl Streep',
   'Robert De Niro', 'Al Pacino', 'Jack Nicholson', 'Morgan Freeman',
   'Samuel L. Jackson', 'Kate Winslet', 'Brad Pitt', 'Cate Blanchett',
   'Jodie Foster', 'Anthony Hopkins', 'Daniel Day-Lewis', 'Christian Bale',
-  'Tilda Swinton', 'Joaquin Phoenix', 'Frances McDormand', 'Philip Seymour Hoffman',
-  'Viola Davis', 'Amy Adams', 'Jeff Bridges', 'Gary Oldman', 'Julianne Moore',
-  'Scarlett Johansson', 'Ryan Gosling', 'Ryan Reynolds', 'Emma Stone', 'Natalie Portman',
-  'Keanu Reeves', 'Sandra Bullock', 'Hugh Jackman', 'Anne Hathaway', 'Tom Cruise',
-  'Keira Knightley', 'Matt Damon', 'Ben Affleck', 'George Clooney', 'Emily Blunt',
-  'Michael Fassbender', 'Idris Elba', 'Mahershala Ali', 'Adam Driver', 'Robert Downey Jr.',
+  'Dustin Hoffman', 'Robin Williams', 'Sean Connery', 'Harrison Ford',
+  'Clint Eastwood', 'Julia Roberts', 'Will Smith', 'Tom Cruise', 'Johnny Depp',
+  'Sigourney Weaver', 'Sandra Bullock', 'Keanu Reeves', 'Angelina Jolie',
+  'Matt Damon', 'George Clooney', 'Joaquin Phoenix', 'Philip Seymour Hoffman',
+  'Viola Davis', 'Tilda Swinton', 'Gary Oldman', 'Jeff Bridges', 'Julianne Moore',
+  'Natalie Portman', 'Robert Redford', 'Steve McQueen', 'Michael Caine',
+  'Sean Penn', 'Whoopi Goldberg', 'Alan Rickman', 'James Earl Jones',
+  'Arnold Schwarzenegger', 'Sylvester Stallone', 'Bruce Willis', 'Mel Gibson',
+  'Kevin Costner', 'Russell Crowe', 'Bill Murray', 'Eddie Murphy', 'Jim Carrey',
+  'Steve Martin', 'John Travolta', 'Kurt Russell', 'Christopher Walken',
+
+  // Modern Superstars
+  'Scarlett Johansson', 'Ryan Gosling', 'Ryan Reynolds', 'Emma Stone',
+  'Hugh Jackman', 'Anne Hathaway', 'Keira Knightley', 'Ben Affleck',
+  'Emily Blunt', 'Michael Fassbender', 'Idris Elba', 'Mahershala Ali',
+  'Adam Driver', 'Robert Downey Jr.', 'Chris Evans', 'Chris Hemsworth',
+  'Mark Ruffalo', 'Jeremy Renner', 'Chris Pratt', 'Dwayne "The Rock" Johnson',
+  'Hugh Jackman', 'Patrick Stewart', 'Ian McKellen', 'Daniel Radcliffe',
+  'Helena Bonham Carter', 'Ralph Fiennes', 'Liam Neeson', 'Ewan McGregor',
+  'Charlize Theron', 'Halle Berry', 'Jennifer Lawrence', 'Reese Witherspoon',
+  'Cameron Diaz', 'Drew Barrymore', 'Gwyneth Paltrow', 'Edward Norton',
+  'Will Ferrell', 'Steve Carell', 'Tina Fey', 'Tom Hardy', 'Benedict Cumberbatch',
+  'Martin Freeman', 'Colin Firth', 'Mark Strong', 'Geoffrey Rush',
+  'Javier Bardem', 'Antonio Banderas', 'Christoph Waltz', 'Daniel Craig',
+  'Judi Dench', 'Helen Mirren', 'Emma Thompson', 'Orlando Bloom',
+  'Viggo Mortensen', 'Elijah Wood', 'Andy Serkis', 'Hugo Weaving',
+  'Christopher Lee', 'Willem Dafoe', 'Jeff Goldblum', 'Sam Neill', 'Uma Thurman',
+  'Val Kilmer', 'Tommy Lee Jones', 'John Goodman', 'Steve Buscemi',
+  'Benicio del Toro', 'Forest Whitaker', 'Jamie Foxx', 'Jon Hamm', 'Elisabeth Moss',
+  'Oscar Isaac', 'John Boyega', 'Jake Gyllenhaal', 'Heath Ledger',
+  'Bradley Cooper', 'Vin Diesel', 'Jason Statham', 'Jackie Chan',
+
+  // Rising Stars
   'Zendaya', 'Anya Taylor-Joy', 'Timothée Chalamet', 'Florence Pugh', 'Brie Larson'
 ];
 
