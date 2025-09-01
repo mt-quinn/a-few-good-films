@@ -1,3 +1,4 @@
+import seedrandom from 'seedrandom';
 import type { TvdbMovieDetails } from './types';
 import { parseMoney } from './utils';
 
@@ -253,8 +254,6 @@ const promptCategories = [
   { weight: 3, source: staticPrompts }
 ];
 
-const totalWeight = promptCategories.reduce((sum, cat) => sum + cat.weight, 0);
-
 // Helper to shuffle an array
 function shuffle<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
@@ -266,53 +265,39 @@ function shuffle<T>(array: T[]): T[] {
 
 export function generatePrompts(): Prompt[] {
   const generatedPrompts: Prompt[] = [];
+  const seed = `${new Date().toISOString().split('T')[0]}`; // Create a stable seed for this generation run
   for (let i = 0; i < 16; i++) {
-    const newPrompt = generateSinglePrompt(generatedPrompts);
+    const newPrompt = generateSinglePrompt(generatedPrompts, seed, i);
     generatedPrompts.push(newPrompt);
   }
   return shuffle(generatedPrompts);
 }
 
-export function generateSinglePrompt(existingPrompts: Prompt[]): Prompt {
+export function generateSinglePrompt(existingPrompts: Prompt[], seed: string, rerollIndex: number): Prompt {
+  const rng = seedrandom(seed + '-reroll-' + rerollIndex);
   const existingIds = new Set(existingPrompts.map(p => p.id));
 
-  // 1. Get the full list of available prompts for each category
-  const availableByCategory = [
-    { name: 'Static', prompts: staticPrompts.filter(p => !existingIds.has(p.id)), tiebreaker: 1 },
-    { name: 'Genres', prompts: GENRES.map(genrePrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 2 },
-    { name: 'Actors', prompts: ACTORS.map(actorPrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 3 },
-    { name: 'Directors', prompts: DIRECTORS.map(directorPrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 4 },
-    { name: 'Decades', prompts: DECADES.map(decadePrompt).filter(p => !existingIds.has(p.id)), tiebreaker: 5 }
-  ].filter(cat => cat.prompts.length > 0); // Only consider categories with available prompts
+  // This is safe because the total number of prompts far exceeds the 16 on the board.
+  while (true) {
+    const totalWeight = promptCategories.reduce((sum, cat) => {
+      const available = cat.source.filter(p => !existingIds.has(p.id));
+      return sum + (available.length > 0 ? cat.weight : 0);
+    }, 0);
+    const randomWeight = rng() * totalWeight;
+    let currentWeight = 0;
 
-  // 2. Count the current number of prompts from each category on the board
-  const staticPromptIds = new Set(staticPrompts.map(p => p.id));
-  const counts = {
-    Static: existingPrompts.filter(p => staticPromptIds.has(p.id)).length,
-    Genres: existingPrompts.filter(p => p.id.startsWith('genre-')).length,
-    Actors: existingPrompts.filter(p => p.id.startsWith('actor-')).length,
-    Directors: existingPrompts.filter(p => p.id.startsWith('director-')).length,
-    Decades: existingPrompts.filter(p => p.id.startsWith('year-') && p.id.endsWith('s')).length,
-  };
+    for (const category of promptCategories) {
+      const availableInCategory = category.source.filter(p => !existingIds.has(p.id));
+      if (availableInCategory.length === 0) continue;
 
-  // 3. Sort the available categories to find the best one to pick from
-  availableByCategory.sort((a, b) => {
-    const countA = counts[a.name as keyof typeof counts];
-    const countB = counts[b.name as keyof typeof counts];
-
-    // Primary sort: by the number of prompts currently on the board (ascending)
-    if (countA !== countB) {
-      return countA - countB;
+      currentWeight += category.weight;
+      if (randomWeight < currentWeight) {
+        // This is the chosen category.
+        
+        // Pick a random prompt from the available ones in this category and return it.
+        const randomIndex = Math.floor(rng() * availableInCategory.length);
+        return availableInCategory[randomIndex];
+      }
     }
-
-    // Secondary sort: by the tiebreaker priority
-    return a.tiebreaker - b.tiebreaker;
-  });
-
-  // 4. The best category to pick from is the first one in the sorted list
-  const chosenCategory = availableByCategory[0];
-
-  // 5. Pick a random prompt from that chosen category
-  const randomIndex = Math.floor(Math.random() * chosenCategory.prompts.length);
-  return chosenCategory.prompts[randomIndex];
+  }
 }

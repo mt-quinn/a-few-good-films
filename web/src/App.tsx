@@ -50,6 +50,8 @@ function App() {
     const v = Number(raw);
     return Number.isFinite(v) ? v : null;
   }, []);
+  const [dailySeed, setDailySeed] = useState<string>('');
+  const [rerollCount, setRerollCount] = useState<number>(0);
 
   // Initial setup
   useEffect(() => {
@@ -71,8 +73,9 @@ function App() {
         setGameState(gameState);
       } else {
         // No saved state for today, fetch a new game
-        const dailyPrompts = await getDailyPrompts();
-        const hydratedPrompts = dailyPrompts.map((p: { id: string }) => promptsById.get(p.id));
+        const { seed, prompts } = await getDailyPrompts();
+        setDailySeed(seed);
+        const hydratedPrompts = prompts.map((p: { id: string }) => promptsById.get(p.id));
         setCells(generateBoard(hydratedPrompts as Prompt[]));
         setLogs([]);
         setGuessesLeft(MAX_GUESSES);
@@ -95,9 +98,11 @@ function App() {
       guessesLeft,
       score,
       gameState,
+      dailySeed,
+      rerollCount,
     };
     localStorage.setItem(dailyKey, JSON.stringify(stateToSave));
-  }, [cells, logs, guessesLeft, score, gameState, debugMode]);
+  }, [cells, logs, guessesLeft, score, gameState, debugMode, dailySeed, rerollCount]);
 
   // Show How-To on first visit
   useEffect(() => {
@@ -307,7 +312,7 @@ function App() {
       const logPanel = playArea?.querySelector('.logPanel') as HTMLElement | null;
       const viewportW = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth);
       const gapPlay = playArea ? parseFloat(getComputedStyle(playArea).gap || '10') : 10;
-      const logW = logPanel ? logPanel.offsetWidth : 0;
+      // const logW = logPanel ? logPanel.offsetWidth : 0;
       const vw = Math.max(0, viewportW - (logPanel ? 0 : 0) - gapPlay - 16);
       const vh = window.innerHeight;
       const appCS = app ? getComputedStyle(app) : null;
@@ -340,6 +345,21 @@ function App() {
       window.removeEventListener('resize', recalc);
     };
   }, [results.length, logs.length]);
+
+  // This function is not currently used but is kept for a potential future "reroll prompt" feature.
+  // To enable it, a UI element (e.g., a button on each cell) would need to be added.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const replacePrompt = (index: number) => {
+    if (guessesLeft > 1) { // Example cost
+      const currentPrompts = cells.map(c => c.prompt);
+      const newPrompt = generateSinglePrompt(currentPrompts, dailySeed, rerollCount);
+      const newCells = [...cells];
+      newCells[index] = { prompt: newPrompt };
+      setCells(newCells);
+      setRerollCount(rerollCount + 1);
+      setGuessesLeft(guessesLeft - 1); // Example cost
+    }
+  };
 
   return (
     <div className="app" ref={appRef}>
