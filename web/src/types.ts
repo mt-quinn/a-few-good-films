@@ -36,14 +36,6 @@ export interface TvdbMovieDetails {
   awards?: { name: string; category: string; isWinner: boolean }[];
 }
 
-export interface GameState {
-  prompts: Prompt[];
-  score: number[];
-  guesses: number;
-  log: LogEntry[];
-  rerollCount: number;
-}
-
 export type Cell = {
   prompt: Prompt;
   filledBy?: { id: string; title: string; posterUrl?: string; };

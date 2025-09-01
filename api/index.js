@@ -128,9 +128,9 @@ router.get('/health', (req, res) => {
 
 router.get('/daily-prompts', (req, res) => {
   const date = new Date();
-  const seed = `${date.getUTCFullYear()}-${date.getUTCMonth() + 1}-${date.getUTCDate()}`;
+  const seed = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
   const prompts = generatePrompts(seed);
-  res.json({ seed, prompts });
+  res.json({ prompts });
 });
 
 // TVDB raw proxy endpoints for debugging in the browser
