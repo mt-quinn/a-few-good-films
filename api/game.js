@@ -170,8 +170,8 @@ const staticPrompts = [
 
 const promptCategories = [
   { weight: 2, source: DIRECTORS.map(directorPrompt) },
-  { weight: 5, source: ACTORS.map(actorPrompt) },
-  { weight: 4, source: GENRES.map(genrePrompt) },
+  { weight: 3, source: ACTORS.map(actorPrompt) },
+  { weight: 3, source: GENRES.map(genrePrompt) },
   { weight: 2, source: DECADES.map(decadePrompt) },
   { weight: 3, source: staticPrompts }
 ];
