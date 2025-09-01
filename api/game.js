@@ -7,7 +7,11 @@ const DIRECTORS = [
   'Spike Lee', 'Wes Anderson', 'David Fincher', 'Denis Villeneuve',
   'James Cameron', 'Peter Jackson', 'Ridley Scott', 'Tim Burton', 'Coen Brothers',
   'The Wachowskis', 'Sofia Coppola', 'Greta Gerwig', 'Bong Joon-ho', 'Hayao Miyazaki',
-  'Guillermo del Toro', 'Jordan Peele', 'Taika Waititi', 'David Lynch'
+  'Guillermo del Toro', 'Jordan Peele', 'Taika Waititi', 'David Lynch',
+  'J.J. Abrams', 'Robert Zemeckis', 'Jon Favreau', 'Sam Raimi', 'Clint Eastwood',
+  'George Clooney', 'M Night Shyamalan', 'Russo Brothers', 'George Lucas',
+  'Zack Snyder', 'Joss Whedon', 'Michael Bay', 'John Carpenter', 'David Cronenberg',
+  'John Hughes', 'Terry Gilliam'
 ];
 
 const ACTORS = [
@@ -58,6 +62,12 @@ const directorPrompt = (director) => {
     return {
       id: `director-coen-brothers`,
       label: `Directed by the Coen Brothers`,
+    };
+  }
+  if (director === 'Russo Brothers') {
+    return {
+      id: `director-russo-brothers`,
+      label: `Directed by the Russo Brothers`,
     };
   }
   if (director === 'The Wachowskis') {

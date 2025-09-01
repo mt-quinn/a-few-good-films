@@ -10,11 +10,15 @@ export interface Prompt {
 // --- Data Sources ---
 const DIRECTORS = [
   'Steven Spielberg', 'Martin Scorsese', 'Quentin Tarantino', 'Alfred Hitchcock',
-  'Stanley Kubrick', 'Christopher Nolan', 'Akira Kurosawa',
+  'Stanley Kubrick', 'Christopher Nolan', 
   'Spike Lee', 'Wes Anderson', 'David Fincher', 'Denis Villeneuve',
   'James Cameron', 'Peter Jackson', 'Ridley Scott', 'Tim Burton', 'Coen Brothers',
-  'The Wachowskis', 'Sofia Coppola', 'Greta Gerwig', 'Bong Joon-ho', 'Hayao Miyazaki',
-  'Guillermo del Toro', 'Jordan Peele', 'Taika Waititi', 'David Lynch'
+  'The Wachowskis', 'Hayao Miyazaki',
+  'Guillermo del Toro', 'Jordan Peele', 'Taika Waititi', 'David Lynch',
+  'J.J. Abrams', 'Robert Zemeckis', 'Jon Favreau', 'Sam Raimi', 'Clint Eastwood',
+  'George Clooney', 'M Night Shyamalan', 'Russo Brothers', 'George Lucas',
+  'Zack Snyder', 'Joss Whedon', 'Michael Bay', 'John Carpenter', 'David Cronenberg',
+  'John Hughes', 'Terry Gilliam'
 ];
 
 const ACTORS = [
@@ -70,6 +74,18 @@ const directorPrompt = (director: string): Prompt => {
         const hasJoel = directors.some(d => /Joel Coen/i.test(d.name));
         const hasEthan = directors.some(d => /Ethan Coen/i.test(d.name));
         return hasJoel && hasEthan;
+      }
+    };
+  }
+  if (director === 'Russo Brothers') {
+    return {
+      id: `director-russo-brothers`,
+      label: `Directed by the Russo Brothers`,
+      test: (m) => {
+        const directors = (m.people || []).filter(p => /director/i.test(p.peopleType || p.type || ''));
+        const hasAnthony = directors.some(d => /Anthony Russo/i.test(d.name));
+        const hasJoe = directors.some(d => /Joe Russo/i.test(d.name));
+        return hasAnthony && hasJoe;
       }
     };
   }
