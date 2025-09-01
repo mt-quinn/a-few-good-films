@@ -27,6 +27,7 @@ function App() {
   const [cells, setCells] = useState<Cell[]>([]);
   const [actorImages, setActorImages] = useState<Record<string, string | null>>({});
   const [dimmedActorCells, setDimmedActorCells] = useState<Record<number, boolean>>({});
+  const dimTimeoutsRef = useRef<Record<number, number>>({});
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TvdbSearchItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -289,14 +290,10 @@ function App() {
     };
   }, [hoveredTip]);
 
-  // Dismiss tooltip on outside tap for touch devices
+  // Dismiss tooltip on any tap for touch devices (including tapping the tooltip itself or anywhere else)
   useEffect(() => {
     if (!isTouchDevice) return;
-    function onDocClick(e: MouseEvent) {
-      const tipEl = tipRef.current;
-      if (tipEl && e.target instanceof Node && tipEl.contains(e.target)) return;
-      const logEl = document.querySelector('.logPanel') as HTMLElement | null;
-      if (logEl && e.target instanceof Node && logEl.contains(e.target)) return;
+    function onDocClick() {
       setHoveredTip(null);
     }
     document.addEventListener('click', onDocClick);
@@ -498,9 +495,28 @@ function App() {
                   key={idx}
                   className={`cell ${isClearing ? 'clearing' : ''} ${isActorHint ? 'actorHintCell' : ''} ${isDim ? 'dim' : ''}`}
                   style={{ width: cellSize, height: cellSize, backgroundImage: poster ? `url(${poster})` : undefined, backgroundSize: poster ? 'cover' : undefined, backgroundPosition: 'center' }}
-                  onClick={() => {
+                  onClick={(e) => {
                     if (isActorHint && isTouch) {
-                      setDimmedActorCells(prev => ({ ...prev, [idx]: !prev[idx] }));
+                      e.stopPropagation();
+                      setDimmedActorCells(prev => {
+                        const next = { ...prev };
+                        const newVal = !prev[idx];
+                        next[idx] = newVal;
+                        // manage 3s timeout when turning on
+                        const tmap = dimTimeoutsRef.current || {};
+                        if (tmap[idx]) {
+                          window.clearTimeout(tmap[idx]);
+                          delete tmap[idx];
+                        }
+                        if (newVal) {
+                          tmap[idx] = window.setTimeout(() => {
+                            setDimmedActorCells(curr => ({ ...curr, [idx]: false }));
+                            delete dimTimeoutsRef.current[idx];
+                          }, 3000);
+                        }
+                        dimTimeoutsRef.current = tmap;
+                        return next;
+                      });
                     }
                   }}
                 >
@@ -561,6 +577,8 @@ function App() {
                 }}
                 onClick={(e) => {
                   if (!isTouchDevice) return;
+                  // prevent immediate document click handler from closing right away
+                  e.stopPropagation();
                   const rowRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const logEl = document.querySelector('.logPanel') as HTMLElement | null;
                   const logLeft = logEl ? logEl.getBoundingClientRect().left : rowRect.left;

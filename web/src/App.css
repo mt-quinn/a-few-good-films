@@ -166,6 +166,7 @@ body {
 }
 .tooltip { display: none; }
 .tipFloating { background: #0e1118; color: var(--text); border: 1px solid #243044; padding: 12px 14px; border-radius: 10px; box-shadow: var(--shadow); max-width: 360px; width: max-content; }
+.tipFloating { box-sizing: border-box; }
 .logItem:hover .tooltip { opacity: 1; }
 .tipTitle { font-weight: 700; margin-bottom: 6px; }
 .tipRow { display: flex; gap: 10px; font-size: 12px; margin: 2px 0; }
@@ -235,6 +236,17 @@ body {
   .logPanel { max-height: 36vh; }
   .logCard { grid-template-columns: 36px 1fr; gap: 8px; }
   .logPoster { width: 36px; height: 54px; }
+  /* Mobile-friendly tooltip layout */
+  .tipFloating {
+    left: 12px !important;
+    right: 12px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+  }
+  .tipTopSection { flex-direction: row; align-items: flex-start; gap: 10px; }
+  .tipPoster { height: 160px; }
+  .tipRow { display: grid; grid-template-columns: 92px 1fr; align-items: start; gap: 8px; }
+  .tipKey { min-width: 0; }
 }
 
 /* Prevent horizontal scroll from any descendants */
