@@ -69,7 +69,7 @@ body.noScroll {
 
 .results { margin-top: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: auto; max-height: min(32vh, 320px); }
 .resultsOverlay { margin-top: 4px; z-index: 200000; max-height: min(50vh, 360px); }
-.resultBtn { width: 100%; text-align: left; padding: 8px 10px; background: transparent; color: var(--text); border: 0; border-bottom: 1px solid var(--border); cursor: pointer; display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; }
+.resultBtn { width: 100%; text-align: left; padding: 8px 10px; background: transparent; color: var(--text); border: 0; border-bottom: 1px solid var(--border); cursor: pointer; display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; font-size: 16px; }
 .resultBtn img { width: 28px; height: 42px; object-fit: cover; border-radius: 4px; background: #222; display: block; }
 .resultBtn:hover { background: #151824; }
 .resultBtn:last-child { border-bottom: 0; }
@@ -264,7 +264,7 @@ body.noScroll {
   .toolbarCenter { order: 3; width: 100%; }
   .searchWrap { width: 100%; }
   .searchBar { gap: 6px; }
-  .searchInput { padding: 10px 12px; font-size: 15px; border-radius: 10px; }
+  .searchInput { padding: 10px 12px; font-size: 16px; border-radius: 10px; }
   .clearBtn { padding: 8px 10px; font-size: 14px; }
   .howToBtn { order: 4; padding: 6px 8px; font-size: 12px; border-radius: 8px; border-color: #2b3242; }
   .results { max-height: 40vh; }
