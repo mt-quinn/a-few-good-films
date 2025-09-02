@@ -73,8 +73,10 @@ body {
   gap: 6px;
   position: relative;
   justify-content: center;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
-.cell { position: relative; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); overflow: hidden; }
+.cell { position: relative; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); overflow: hidden; touch-action: none; }
 .cell { border: 1px solid var(--border); }
 .hintOverlay { position: absolute; inset: 0; background-size: cover; background-position: center; filter: grayscale(100%) brightness(0.55); }
 .cellContent { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; pointer-events: none; }
@@ -259,12 +261,12 @@ body {
 }
 
 /* Prevent horizontal scroll from any descendants */
-.app, .playArea, .boardWrap, .grid, .toolbar, .logPanel, .resultsOverlay, .gameOverOverlay, .overlayModal {
-  overflow-x: hidden;
-}
+.app, .playArea, .boardWrap, .grid, .toolbar, .logPanel, .resultsOverlay, .gameOverOverlay, .overlayModal { overflow-x: hidden; }
+/* Prevent vertical scrolling/bounce specifically for the board area */
+.boardWrap, .grid { overscroll-behavior: none; }
 
 /* Center the game area strictly and avoid layout shifts */
-.boardWrap { width: 100%; display: grid; place-items: center; }
+.boardWrap { width: 100%; display: grid; place-items: center; overflow: hidden; }
 
 .gameOverOverlay {
   position: absolute;
