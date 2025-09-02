@@ -574,6 +574,13 @@ function App() {
       })()}
       <div className="toolbar" ref={toolbarRef}>
         <div className="title">A Few Good Films</div>
+        <button className="howToBtn modeSwitchBtn" onClick={() => {
+          setMode(m => {
+            const next = m === 'daily' ? 'fixed' : 'daily';
+            setCells([]);
+            return next;
+          });
+        }}>{mode === 'daily' ? 'Switch to Fixed (5x5)' : 'Switch to Daily (4x4)'}</button>
         <div className="toolbarCenter">
           <div className="searchWrap" ref={searchRef}>
             <div className="searchBar">
@@ -607,19 +614,14 @@ function App() {
             )}
           </div>
         </div>
-        <div className="counterPanel">Score: <strong>{score}</strong></div>
-        {mode === 'daily' ? (
-          <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
-        ) : (
-          <div className="counterPanel">Guesses Used: <strong>{fixedGuesses}</strong></div>
-        )}
-        <button className="howToBtn modeSwitchBtn" onClick={() => {
-          setMode(m => {
-            const next = m === 'daily' ? 'fixed' : 'daily';
-            setCells([]);
-            return next;
-          });
-        }}>{mode === 'daily' ? 'Switch to Fixed (5x5)' : 'Switch to Daily (4x4)'}</button>
+        <div className="toolbarCounters">
+          <div className="counterPanel">Score: <strong>{score}</strong></div>
+          {mode === 'daily' ? (
+            <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
+          ) : (
+            <div className="counterPanel">Guesses Used: <strong>{fixedGuesses}</strong></div>
+          )}
+        </div>
         <button className="howToBtn" onClick={() => setShowHowTo(true)}>HOW TO PLAY</button>
         {gameState === 'gameOver' && !showGameOver && (
           <button className="howToBtn" onClick={() => setShowGameOver(true)}>VIEW SUMMARY</button>
