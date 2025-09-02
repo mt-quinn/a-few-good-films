@@ -578,7 +578,7 @@ function App() {
           <div className="title" onClick={() => {
             setShowReset(true);
             window.setTimeout(() => setShowReset(false), 6000);
-          }}>A Few Good Films</div>
+          }}>Screen Test</div>
           {showReset && (
             <button
               className="debugBtn"
