@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import './App.css'
 import { searchMovies, getMovieDetails, getDailyPrompts, getPersonByName, type PersonLookup } from './api'
 import { generatePrompts, generateSinglePrompt, allPossiblePrompts, buildPromptFromServer } from './prompts'
@@ -474,11 +475,11 @@ function App() {
               />
               {query && <button className="clearBtn" onClick={() => { setQuery(''); setResults([]); }}>Clear</button>}
             </div>
-            {results.length > 0 && (
+            {results.length > 0 && resultsPos && createPortal(
               <div
                 className="results resultsOverlay"
                 ref={resultsRef}
-                style={resultsPos ? { position: 'fixed', left: resultsPos.left, top: resultsPos.top, width: resultsPos.width, zIndex: 200000 } : undefined}
+                style={{ position: 'fixed', left: resultsPos.left, top: resultsPos.top, width: resultsPos.width, zIndex: 200000 }}
               >
                 {results.slice(0,10).map(r => {
                   const isGuessed = logs.some(log => log.id === r.tvdbId);
@@ -489,7 +490,8 @@ function App() {
                     </button>
                   );
                 })}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </div>
