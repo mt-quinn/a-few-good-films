@@ -91,9 +91,15 @@ function App() {
         }));
         setCells(hydratedCells);
         setLogs(logs);
-        setGuessesLeft(guessesLeft);
+        setGuessesLeft(typeof guessesLeft === 'number' && Number.isFinite(guessesLeft) ? guessesLeft : MAX_GUESSES);
         setScore(score);
-        setGameState(gameState);
+        // Correct stale game-over if guesses remain in Daily
+        if (mode === 'daily' && gameState === 'gameOver' && (typeof guessesLeft === 'number' ? guessesLeft : MAX_GUESSES) > 0) {
+          setGameState('playing');
+          setShowGameOver(false);
+        } else {
+          setGameState(gameState);
+        }
         setDailySeed(dailySeed || '');
         setRerollCount(rerollCount || 0);
         setMode(savedMode || 'daily');
