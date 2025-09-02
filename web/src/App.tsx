@@ -207,11 +207,27 @@ function App() {
       }
 
       const satisfiedPrompts: Prompt[] = [];
+      const highlight: LogEntry['highlight'] = {};
       const nextCells = cells.map(cell => {
         if (cell.filledBy || cell.clearing) return cell;
         const ok = cell.prompt.test(details as TvdbMovieDetails, title);
         if (ok) {
           satisfiedPrompts.push(cell.prompt);
+          // Capture highlight reasons based on which prompt matched
+          try {
+            const pid = cell.prompt.id;
+            if (/^actor-/.test(pid)) {
+              const actorName = cell.prompt.label.replace(/^Stars\s+/i, '');
+              highlight.actors = Array.from(new Set([...(highlight.actors || []), actorName]));
+            }
+            if (pid === 'budget-under-1m') {
+              highlight.budgetUnder1m = true;
+            }
+            const dec = pid.match(/^year-(\d{4})s$/);
+            if (dec) {
+              highlight.decade = Number(dec[1]);
+            }
+          } catch {}
           return { ...cell, filledBy: { id: tvdbId, title, posterUrl: (details as TvdbMovieDetails).posterUrl } };
         }
         return cell;
@@ -255,6 +271,7 @@ function App() {
         awards: (details.awards || []).map((a, i) => ({ id: `${tvdbId}-award-${i}`, name: a.name, isWinner: a.isWinner })),
         clearedPrompts: satisfiedPrompts.map(p => p.label),
         score: guessScore,
+        highlight,
       }, ...prev]);
       // Clear input and results after successful apply
       setQuery('');
@@ -734,10 +751,25 @@ function App() {
           <div className="tipRow"><span className="tipKey">Genres</span><span className="tipVal">{hoveredTip.genres && hoveredTip.genres.length > 0 ? hoveredTip.genres.join(', ') : 'None'}</span></div>
           <div className="tipRow"><span className="tipKey">Runtime</span><span className="tipVal">{hoveredTip.runtime != null ? `${hoveredTip.runtime} min` : 'None'}</span></div>
           <div className="tipRow"><span className="tipKey">Director</span><span className="tipVal">{hoveredTip.directors && hoveredTip.directors.length > 0 ? hoveredTip.directors.join(', ') : 'None'}</span></div>
-          <div className="tipRow"><span className="tipKey">Stars</span><span className="tipVal">{hoveredTip.stars && hoveredTip.stars.length > 0 ? hoveredTip.stars.join(', ') : 'None'}</span></div>
+          <div className="tipRow"><span className="tipKey">Stars</span><span className="tipVal">{
+            hoveredTip.stars && hoveredTip.stars.length > 0 ? (
+              hoveredTip.stars.map((s, i) => {
+                const isHl = (hoveredTip.highlight?.actors || []).some(a => new RegExp(a.replace(/[-/\\^$*+?.()|[\]{}]/g, '.'), 'i').test(s));
+                return <span key={i} className={isHl ? 'hl' : ''}>{s}{i < hoveredTip.stars!.length - 1 ? ', ' : ''}</span>;
+              })
+            ) : 'None'
+          }</span></div>
           <div className="tipRow"><span className="tipKey">Language</span><span className="tipVal">{hoveredTip.language ? hoveredTip.language.toUpperCase() : 'N/A'}</span></div>
-          <div className="tipRow"><span className="tipKey">Budget</span><span className="tipVal">{hoveredTip.budget && hoveredTip.budget > 0 ? `$${hoveredTip.budget.toLocaleString()}` : 'None'}</span></div>
+          <div className="tipRow"><span className="tipKey">Budget</span><span className="tipVal">{hoveredTip.budget && hoveredTip.budget > 0 ? <span className={hoveredTip.highlight?.budgetUnder1m ? 'hl' : ''}>{`$${hoveredTip.budget.toLocaleString()}`}</span> : 'None'}</span></div>
           <div className="tipRow"><span className="tipKey">Box Office</span><span className="tipVal">{hoveredTip.boxOffice && hoveredTip.boxOffice > 0 ? `$${hoveredTip.boxOffice.toLocaleString()}` : 'None'}</span></div>
+          {(() => {
+            const dec = hoveredTip.highlight?.decade;
+            if (!dec || !hoveredTip.year) return null;
+            const y = Number(String(hoveredTip.year).slice(0,4));
+            const inDecade = y >= dec && y <= (dec + 9);
+            if (!inDecade) return null;
+            return <div className="tipRow"><span className="tipKey">Decade</span><span className="tipVal"><span className="hl">{`${dec}s`}</span></span></div>;
+          })()}
           <div className="tipRow"><span className="tipKey">Awards</span><span className="tipVal">{
             (() => {
               const wins = (hoveredTip.awards || []).filter(a => a.isWinner);

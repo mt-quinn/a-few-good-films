@@ -58,6 +58,11 @@ export type LogEntry = {
   awards?: { id: string; name: string; isWinner: boolean }[];
   clearedPrompts?: string[];
   score?: number;
+  highlight?: {
+    actors?: string[];
+    budgetUnder1m?: boolean;
+    decade?: number; // e.g. 1990 for 1990s
+  };
 };
 
 

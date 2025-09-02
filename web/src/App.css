@@ -194,6 +194,7 @@ body.noScroll {
 .tipVal {
   white-space: normal;
 }
+.tipVal .hl { color: #9ff2cd; font-weight: 700; }
 
 .tipTopSection {
   display: flex;
