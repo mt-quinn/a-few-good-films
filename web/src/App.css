@@ -60,7 +60,7 @@ body {
 .clearBtn:hover { color: var(--text); border-color: #2b3242; }
 
 .results { margin-top: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: auto; max-height: min(32vh, 320px); }
-.resultsOverlay { position: absolute; left: 0; right: 0; margin-top: 4px; z-index: 50; }
+.resultsOverlay { margin-top: 4px; z-index: 200000; }
 .resultBtn { width: 100%; text-align: left; padding: 8px 10px; background: transparent; color: var(--text); border: 0; border-bottom: 1px solid var(--border); cursor: pointer; display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; }
 .resultBtn img { width: 28px; height: 42px; object-fit: cover; border-radius: 4px; background: #222; display: block; }
 .resultBtn:hover { background: #151824; }

@@ -51,6 +51,7 @@ function App() {
   const searchRef = useRef<HTMLDivElement | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const [resultsPos, setResultsPos] = useState<null | { left: number; top: number; width: number }>(null);
   const [cellSize, setCellSize] = useState<number>(140);
   const sharedScore = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -140,6 +141,16 @@ function App() {
     debounceRef.current = window.setTimeout(async () => {
       const list = await searchMovies(t);
       setResults(list);
+      // calculate results overlay position based on search input
+      try {
+        const host = searchRef.current;
+        if (host) {
+          const inputEl = host.querySelector('.searchBar') as HTMLElement | null;
+          const el = inputEl || host;
+          const r = el.getBoundingClientRect();
+          setResultsPos({ left: r.left, top: r.bottom + 4, width: r.width });
+        }
+      } catch {}
     }, 250);
   }, []);
 
@@ -416,10 +427,27 @@ function App() {
     }
     recalc();
     window.addEventListener('resize', recalc);
+    // also keep results overlay aligned if open
+    function recalcResults() {
+      if (!resultsPos) return;
+      try {
+        const host = searchRef.current;
+        if (host) {
+          const inputEl = host.querySelector('.searchBar') as HTMLElement | null;
+          const el = inputEl || host;
+          const r = el.getBoundingClientRect();
+          setResultsPos({ left: r.left, top: r.bottom + 4, width: r.width });
+        }
+      } catch {}
+    }
+    window.addEventListener('scroll', recalcResults, true);
+    window.addEventListener('resize', recalcResults);
     return () => {
       window.removeEventListener('resize', recalc);
+      window.removeEventListener('scroll', recalcResults, true);
+      window.removeEventListener('resize', recalcResults);
     };
-  }, [results.length, logs.length]);
+  }, [results.length, logs.length, resultsPos]);
 
   return (
     <div className="app" ref={appRef}>
@@ -447,7 +475,11 @@ function App() {
               {query && <button className="clearBtn" onClick={() => { setQuery(''); setResults([]); }}>Clear</button>}
             </div>
             {results.length > 0 && (
-              <div className="results resultsOverlay" ref={resultsRef}>
+              <div
+                className="results resultsOverlay"
+                ref={resultsRef}
+                style={resultsPos ? { position: 'fixed', left: resultsPos.left, top: resultsPos.top, width: resultsPos.width, zIndex: 200000 } : undefined}
+              >
                 {results.slice(0,10).map(r => {
                   const isGuessed = logs.some(log => log.id === r.tvdbId);
                   return (
