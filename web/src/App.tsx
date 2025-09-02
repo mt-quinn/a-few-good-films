@@ -581,7 +581,7 @@ function App() {
               setCells([]);
               return next;
             });
-          }}>{mode === 'daily' ? 'Switch to Fixed (5x5)' : 'Switch to Daily (4x4)'}</button>
+          }}>{mode === 'daily' ? 'Switch to Fixed' : 'Switch to Daily'}</button>
         </div>
         <div className="toolbarCenter">
           <div className="searchWrap" ref={searchRef}>
@@ -867,8 +867,8 @@ function App() {
         <div className="overlayModal" role="dialog" aria-modal="true">
           <div className="modalCard">
             <h3>How to Play</h3>
-            <p><strong>Daily (4x4):</strong> You have 10 guesses to check off as many boxes as possible. Checked boxes are replaced with new prompts. Each box is worth 1 point, and one movie can satisfy multiple prompts.</p>
-            <p><strong>Fixed (5x5):</strong> A 5x5 grid that does not refresh when filled. There’s no guess limit; the goal is to fill all 25 cells in as few guesses as possible.</p>
+            <p><strong>Daily:</strong> A 4x4 grid. You have 10 guesses to check off as many boxes as possible. Checked boxes are replaced with new prompts. Each box is worth 1 point, and one movie can satisfy multiple prompts.</p>
+            <p><strong>Fixed:</strong> A 4x4 grid that does not refresh when filled. There’s no guess limit; the goal is to fill all 16 cells in as few guesses as possible.</p>
             <div className="modalActions">
               <button className="okBtn" onClick={() => { try { localStorage.setItem('afgf-howto-shown-v1', '1'); } catch {} setShowHowTo(false); }}>OK</button>
             </div>
