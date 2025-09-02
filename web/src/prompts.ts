@@ -246,13 +246,13 @@ export const allPossiblePrompts = [
 
 // --- Main Generation Logic ---
 
-const promptCategories = [
-  { weight: 2, source: DIRECTORS.map(directorPrompt) },
-  { weight: 3, source: ACTORS.map(actorPrompt) },
-  { weight: 3, source: GENRES.map(genrePrompt) },
-  { weight: 2, source: DECADES.map(decadePrompt) },
-  { weight: 3, source: staticPrompts }
-];
+// const promptCategories = [
+//   { weight: 2, source: DIRECTORS.map(directorPrompt) },
+//   { weight: 3, source: ACTORS.map(actorPrompt) },
+//   { weight: 3, source: GENRES.map(genrePrompt) },
+//   { weight: 2, source: DECADES.map(decadePrompt) },
+//   { weight: 3, source: staticPrompts }
+// ];
 
 // const totalWeight = promptCategories.reduce((sum, cat) => sum + cat.weight, 0);
 
@@ -266,11 +266,14 @@ function shuffle<T>(array: T[]): T[] {
 }
 
 export function generatePrompts(): Prompt[] {
+  return generateNPrompts(16);
+}
+
+export function generateNPrompts(count: number, seed?: string): Prompt[] {
   const generatedPrompts: Prompt[] = [];
-  // Use a stable seed for this generation run so UI doesn't re-render differently.
-  const seed = `${new Date().toISOString().split('T')[0]}`;
-  for (let i = 0; i < 16; i++) {
-    const newPrompt = generateSinglePrompt(generatedPrompts, seed, i);
+  const baseSeed = seed ?? `${new Date().toISOString().split('T')[0]}`;
+  for (let i = 0; i < count; i++) {
+    const newPrompt = generateSinglePrompt(generatedPrompts, baseSeed, i);
     generatedPrompts.push(newPrompt);
   }
   return shuffle(generatedPrompts);

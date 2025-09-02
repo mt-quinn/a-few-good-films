@@ -107,6 +107,15 @@ body {
 
 .posterOverlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.0) 60%, rgba(0,0,0,0.6)); }
 
+/* Marathon mode: 5x5 grid when body has data-mode="marathon" */
+:root[data-mode="marathon"] .grid {
+  grid-template-columns: repeat(5, var(--cell-size, 120px));
+}
+
+/* Mode switch button (reuse howToBtn) */
+.howToBtn { margin-left: 8px; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+.howToBtn:hover { background: #1b1f2a; }
+
 @media (max-width: 860px) { .grid { gap: 4px; } }
 @media (max-width: 520px) { .toolbar { flex-wrap: wrap; } .counter { width: 100%; text-align: right; } }
 

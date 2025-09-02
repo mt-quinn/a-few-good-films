@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect } fr
 import { createPortal } from 'react-dom'
 import './App.css'
 import { searchMovies, getMovieDetails, getDailyPrompts, getPersonByName, type PersonLookup } from './api'
-import { generatePrompts, generateSinglePrompt, allPossiblePrompts, buildPromptFromServer } from './prompts'
+import { generatePrompts, generateSinglePrompt, generateNPrompts, allPossiblePrompts, buildPromptFromServer } from './prompts'
 import type { Prompt } from './prompts';
 import type { Cell, TvdbMovieDetails, LogEntry, TvdbSearchItem } from './types'
 import { parseMoney } from './utils';
 
 const MAX_GUESSES = 10;
+type GameMode = 'daily' | 'marathon';
 
 // Create a map of all possible prompts by their ID for easy look-up
 const promptsById = new Map<string, Prompt>();
@@ -17,10 +18,11 @@ function generateBoard(prompts: Prompt[]): Cell[] {
   return prompts.map((prompt) => ({ prompt }));
 }
 
-function getDailyKey() {
+function getDailyKey(mode: GameMode) {
   const now = new Date();
   // Use UTC date to ensure players in different timezones get the same puzzle on the same day
-  return `daily-game-${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
+  const base = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
+  return mode === 'daily' ? `daily-game-${base}` : `marathon-${base}`;
 }
 
 
@@ -35,6 +37,8 @@ function App() {
   const [guessesLeft, setGuessesLeft] = useState(MAX_GUESSES);
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'gameOver'>('playing');
+  const [mode, setMode] = useState<GameMode>('daily');
+  const [marathonGuesses, setMarathonGuesses] = useState<number>(0);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
@@ -66,12 +70,18 @@ function App() {
 
   // Initial setup
   useEffect(() => {
+    try {
+      document.documentElement.setAttribute('data-mode', mode);
+    } catch {}
+  }, [mode]);
+
+  useEffect(() => {
     const startDailyGame = async () => {
-      const dailyKey = getDailyKey();
+      const dailyKey = getDailyKey(mode);
       const savedState = localStorage.getItem(dailyKey);
 
       if (savedState) {
-        const { cells, logs, guessesLeft, score, gameState, dailySeed, rerollCount } = JSON.parse(savedState);
+        const { cells, logs, guessesLeft, score, gameState, dailySeed, rerollCount, mode: savedMode, marathonGuesses } = JSON.parse(savedState);
         // We need to re-hydrate the prompts with their `test` functions
         const hydratedCells = cells.map((cell: Cell) => ({
           ...cell,
@@ -84,31 +94,47 @@ function App() {
         setGameState(gameState);
         setDailySeed(dailySeed || '');
         setRerollCount(rerollCount || 0);
+        setMode(savedMode || 'daily');
+        setMarathonGuesses(marathonGuesses || 0);
       } else {
-        // No saved state for today, fetch a new game
-        const { seed, prompts } = await getDailyPrompts();
-        const hydratedPrompts = prompts.map((p: { id: string; label: string }) => {
-          const found = promptsById.get(p.id);
-          return found || buildPromptFromServer(p.id, p.label);
-        });
-        setCells(generateBoard(hydratedPrompts as Prompt[]));
-        setLogs([]);
-        setGuessesLeft(MAX_GUESSES);
-        setScore(0);
-        setGameState('playing');
-        setDebugMode(false);
-        setDailySeed(seed || '');
-        setRerollCount(0);
+        // New state for this mode
+        if (mode === 'daily') {
+          const { seed, prompts } = await getDailyPrompts();
+          const hydratedPrompts = prompts.map((p: { id: string; label: string }) => {
+            const found = promptsById.get(p.id);
+            return found || buildPromptFromServer(p.id, p.label);
+          });
+          setCells(generateBoard(hydratedPrompts as Prompt[]));
+          setLogs([]);
+          setGuessesLeft(MAX_GUESSES);
+          setScore(0);
+          setGameState('playing');
+          setDebugMode(false);
+          setDailySeed(seed || '');
+          setRerollCount(0);
+          setMarathonGuesses(0);
+        } else {
+          const prompts = generateNPrompts(25);
+          setCells(generateBoard(prompts as Prompt[]));
+          setLogs([]);
+          setGuessesLeft(Number.POSITIVE_INFINITY as unknown as number);
+          setScore(0);
+          setGameState('playing');
+          setDebugMode(false);
+          setDailySeed('');
+          setRerollCount(0);
+          setMarathonGuesses(0);
+        }
       }
     };
 
     startDailyGame();
-  }, []);
+  }, [mode]);
 
   // Save game state to localStorage whenever it changes
   useEffect(() => {
     if (cells.length === 0 || debugMode) return; // Don't save empty initial state or debug sessions
-    const dailyKey = getDailyKey();
+    const dailyKey = getDailyKey(mode);
     const stateToSave = {
       cells,
       logs,
@@ -117,9 +143,11 @@ function App() {
       gameState,
       dailySeed,
       rerollCount,
+      mode,
+      marathonGuesses,
     };
     localStorage.setItem(dailyKey, JSON.stringify(stateToSave));
-  }, [cells, logs, guessesLeft, score, gameState, debugMode, dailySeed, rerollCount]);
+  }, [cells, logs, guessesLeft, score, gameState, debugMode, dailySeed, rerollCount, mode, marathonGuesses]);
 
   // Show How-To on first visit
   useEffect(() => {
@@ -184,7 +212,8 @@ function App() {
       
       // A correct guess was made, keep UI locked for animations
       setScore(s => s + guessScore);
-      setGuessesLeft(n => n - 1);
+      if (mode === 'daily') setGuessesLeft(n => n - 1);
+      if (mode === 'marathon') setMarathonGuesses(n => n + 1);
       setCells(nextCells);
       
       // Append to log
@@ -222,38 +251,43 @@ function App() {
       setQuery('');
       setResults([]);
 
-      // After a delay, mark filled cells as 'clearing'
-      setTimeout(() => {
-        setCells(currentCells => currentCells.map(cell => {
-          // Only mark the *newly* filled cells for clearing
-          if (cell.filledBy?.id === tvdbId) {
-            return { ...cell, clearing: true };
-          }
-          return cell;
-        }));
-      }, 1500);
-
-      // After another delay (for fade-out), replace them with new prompts
-      setTimeout(() => {
-        setCells(currentCells => {
-          let currentPrompts = currentCells.map(c => c.prompt);
-          let updatedRerollCount = rerollCount;
-          
-          const nextCells = currentCells.map(cell => {
-            if (cell.clearing) {
-              const newPrompt = generateSinglePrompt(currentPrompts, dailySeed, updatedRerollCount);
-              currentPrompts.push(newPrompt);
-              updatedRerollCount++;
-              return { prompt: newPrompt };
+      if (mode === 'daily') {
+        // After a delay, mark filled cells as 'clearing'
+        setTimeout(() => {
+          setCells(currentCells => currentCells.map(cell => {
+            // Only mark the *newly* filled cells for clearing
+            if (cell.filledBy?.id === tvdbId) {
+              return { ...cell, clearing: true };
             }
             return cell;
-          });
+          }));
+        }, 1500);
 
-          setRerollCount(updatedRerollCount);
-          return nextCells;
-        });
-        setSubmitting(false); // Re-enable submissions
-      }, 3000);
+        // After another delay (for fade-out), replace them with new prompts
+        setTimeout(() => {
+          setCells(currentCells => {
+            let currentPrompts = currentCells.map(c => c.prompt);
+            let updatedRerollCount = rerollCount;
+            
+            const nextCells = currentCells.map(cell => {
+              if (cell.clearing) {
+                const newPrompt = generateSinglePrompt(currentPrompts, dailySeed, updatedRerollCount);
+                currentPrompts.push(newPrompt);
+                updatedRerollCount++;
+                return { prompt: newPrompt };
+              }
+              return cell;
+            });
+
+            setRerollCount(updatedRerollCount);
+            return nextCells;
+          });
+          setSubmitting(false); // Re-enable submissions
+        }, 3000);
+      } else {
+        // Marathon: no clearing or replacement; just re-enable submissions
+        setSubmitting(false);
+      }
 
     } catch (error) {
       console.error("Error applying movie:", error);
@@ -262,11 +296,18 @@ function App() {
   }, [cells, logs, dailySeed, rerollCount]);
 
   useEffect(() => {
-    if (guessesLeft <= 0 && gameState === 'playing') {
-      setGameState('gameOver');
-      setShowGameOver(true);
+    if (mode === 'daily') {
+      if (guessesLeft <= 0 && gameState === 'playing') {
+        setGameState('gameOver');
+        setShowGameOver(true);
+      }
+    } else {
+      if (gameState === 'playing' && cells.length > 0 && cells.every(c => !!c.filledBy)) {
+        setGameState('gameOver');
+        setShowGameOver(true);
+      }
     }
-  }, [guessesLeft, gameState]);
+  }, [guessesLeft, gameState, mode, cells]);
 
   // Keep tooltip within viewport by measuring after render
   useLayoutEffect(() => {
@@ -315,20 +356,7 @@ function App() {
     return () => document.removeEventListener('click', onDocClick);
   }, [isTouchDevice]);
 
-  // This function is not currently used but is kept for a potential future "reroll prompt" feature.
-  // To enable it, a UI element (e.g., a button on each cell) would need to be added.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const replacePrompt = (index: number) => {
-    if (guessesLeft > 1) { // Example cost
-      const currentPrompts = cells.map(c => c.prompt);
-      const newPrompt = generateSinglePrompt(currentPrompts, dailySeed, rerollCount);
-      const newCells = [...cells];
-      newCells[index] = { prompt: newPrompt };
-      setCells(newCells);
-      setRerollCount(rerollCount + 1);
-      setGuessesLeft(guessesLeft - 1); // Example cost
-    }
-  };
+  // (reroll feature removed in marathon work; kept out to reduce warnings)
 
   const startDebugGame = useCallback(() => {
     setDebugMode(true);
@@ -496,7 +524,18 @@ function App() {
           </div>
         </div>
         <div className="counterPanel">Score: <strong>{score}</strong></div>
-        <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
+        {mode === 'daily' ? (
+          <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
+        ) : (
+          <div className="counterPanel">Guesses Used: <strong>{marathonGuesses}</strong></div>
+        )}
+        <button className="howToBtn" onClick={() => {
+          setMode(m => {
+            const next = m === 'daily' ? 'marathon' : 'daily';
+            setCells([]);
+            return next;
+          });
+        }}>{mode === 'daily' ? 'Switch to Marathon (5x5)' : 'Switch to Daily (4x4)'}</button>
         <button className="howToBtn" onClick={() => setShowHowTo(true)}>HOW TO PLAY</button>
         {gameState === 'gameOver' && !showGameOver && (
           <button className="howToBtn" onClick={() => setShowGameOver(true)}>VIEW SUMMARY</button>
