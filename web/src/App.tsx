@@ -69,6 +69,7 @@ function App() {
   }, []);
   const [dailySeed, setDailySeed] = useState<string>('');
   const [rerollCount, setRerollCount] = useState<number>(0);
+  const [showReset, setShowReset] = useState<boolean>(false);
 
   // Initial setup
   useEffect(() => {
@@ -574,7 +575,21 @@ function App() {
       })()}
       <div className="toolbar" ref={toolbarRef}>
         <div className="toolbarTop">
-          <div className="title">A Few Good Films</div>
+          <div className="title" onClick={() => {
+            setShowReset(true);
+            window.setTimeout(() => setShowReset(false), 6000);
+          }}>A Few Good Films</div>
+          {showReset && (
+            <button
+              className="debugBtn"
+              onClick={() => {
+                const ok = window.confirm('Reset all saved data? This will reload the app.');
+                if (!ok) return;
+                try { localStorage.clear(); } catch {}
+                window.location.reload();
+              }}
+            >RESET SAVE</button>
+          )}
           <button className="howToBtn modeSwitchBtn" onClick={() => {
             setMode(m => {
               const next = m === 'daily' ? 'fixed' : 'daily';
@@ -867,8 +882,8 @@ function App() {
         <div className="overlayModal" role="dialog" aria-modal="true">
           <div className="modalCard">
             <h3>How to Play</h3>
-            <p><strong>Daily:</strong> A 4x4 grid. You have 10 guesses to check off as many boxes as possible. Checked boxes are replaced with new prompts. Each box is worth 1 point, and one movie can satisfy multiple prompts.</p>
-            <p><strong>Fixed:</strong> A 4x4 grid that does not refresh when filled. There’s no guess limit; the goal is to fill all 16 cells in as few guesses as possible.</p>
+            <p><strong>Daily:</strong> You have 10 guesses to check off as many boxes as possible. Checked boxes are replaced with new prompts. Each box is worth 1 point, and one movie can satisfy multiple prompts.</p>
+            <p><strong>Fixed:</strong> Prompts do not refresh when filled. There’s no guess limit; the goal is to fill all boxes in as few guesses as possible.</p>
             <div className="modalActions">
               <button className="okBtn" onClick={() => { try { localStorage.setItem('afgf-howto-shown-v1', '1'); } catch {} setShowHowTo(false); }}>OK</button>
             </div>
