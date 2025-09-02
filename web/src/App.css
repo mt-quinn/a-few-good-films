@@ -87,14 +87,16 @@ body.noScroll {
 }
 .cell { position: relative; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); overflow: hidden; touch-action: pan-y; }
 .cell { border: 1px solid var(--border); }
-.hintOverlay { position: absolute; inset: 0; background-size: cover; background-position: center; filter: grayscale(100%) brightness(0.55); }
+.hintOverlay { position: absolute; inset: 0; background-size: cover; background-position: center; filter: grayscale(100%) brightness(0.55); transform: scale(1); transition: transform 200ms ease; will-change: transform; }
 .cellContent { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; pointer-events: none; }
 .actorHintCell:hover .promptPanel,
 .actorHintCell:hover .promptLarge,
 .actorHintCell.dim .promptPanel,
-.actorHintCell.dim .promptLarge {
-  opacity: 0.2;
-}
+.actorHintCell.dim .promptLarge { opacity: 0; }
+
+/* Pop out the actor hint image slightly on hover/tap */
+.actorHintCell:hover .hintOverlay,
+.actorHintCell.dim .hintOverlay { transform: scale(1.2); }
 .cellContent.empty { display: flex; align-items: center; justify-content: center; }
 .promptLarge { display: block; text-align: center; padding: 8px; color: #fff; font-weight: 700; font-size: clamp(12px, calc(var(--cell-size, 120px)/8), 20px); line-height: 1.15; text-shadow: 0 2px 4px rgba(0,0,0,0.85), 0 0 10px rgba(0,0,0,0.6); }
 .promptPanel {
