@@ -785,7 +785,19 @@ function App() {
             )}
           </div>
 
-          <div className="tipTitle"><span className={hoveredTip.highlight?.title ? 'hl' : ''}>{hoveredTip.title}</span>{hoveredTip.year ? ` (${hoveredTip.year})` : ''}</div>
+          <div className="tipTitle">
+            <span className={hoveredTip.highlight?.title ? 'hl' : ''}>{hoveredTip.title}</span>
+            {hoveredTip.year ? (
+              <> (
+                <span className={((() => {
+                  const dec = hoveredTip.highlight?.decade;
+                  if (!dec) return '';
+                  const y = Number(String(hoveredTip.year).slice(0,4));
+                  return (y >= dec && y <= dec + 9) ? 'hl' : '';
+                })())}>{hoveredTip.year}</span>
+              )</>
+            ) : null}
+          </div>
           <div className="tipRow"><span className="tipKey">Genres</span><span className="tipVal">{
             hoveredTip.genres && hoveredTip.genres.length > 0 ? (
               hoveredTip.genres.map((g, i) => {
@@ -814,14 +826,6 @@ function App() {
           <div className="tipRow"><span className="tipKey">Language</span><span className="tipVal"><span className={hoveredTip.highlight?.languageNonEnglish ? 'hl' : ''}>{hoveredTip.language ? hoveredTip.language.toUpperCase() : 'N/A'}</span></span></div>
           <div className="tipRow"><span className="tipKey">Budget</span><span className="tipVal">{hoveredTip.budget && hoveredTip.budget > 0 ? <span className={hoveredTip.highlight?.budgetUnder1m || hoveredTip.highlight?.budgetOver100m ? 'hl' : ''}>{`$${hoveredTip.budget.toLocaleString()}`}</span> : 'None'}</span></div>
           <div className="tipRow"><span className="tipKey">Box Office</span><span className="tipVal">{hoveredTip.boxOffice && hoveredTip.boxOffice > 0 ? <span className={hoveredTip.highlight?.boxOffice10x || hoveredTip.highlight?.boxOfficeFlop ? 'hl' : ''}>{`$${hoveredTip.boxOffice.toLocaleString()}`}</span> : 'None'}</span></div>
-          {(() => {
-            const dec = hoveredTip.highlight?.decade;
-            if (!dec || !hoveredTip.year) return null;
-            const y = Number(String(hoveredTip.year).slice(0,4));
-            const inDecade = y >= dec && y <= (dec + 9);
-            if (!inDecade) return null;
-            return <div className="tipRow"><span className="tipKey">Decade</span><span className="tipVal"><span className="hl">{`${dec}s`}</span></span></div>;
-          })()}
           <div className="tipRow"><span className="tipKey">Awards</span><span className="tipVal"><span className={hoveredTip.highlight?.awards ? 'hl' : ''}> {
             (() => {
               const wins = (hoveredTip.awards || []).filter(a => a.isWinner);
