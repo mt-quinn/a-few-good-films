@@ -613,7 +613,7 @@ function App() {
         ) : (
           <div className="counterPanel">Guesses Used: <strong>{fixedGuesses}</strong></div>
         )}
-        <button className="howToBtn" onClick={() => {
+        <button className="howToBtn modeSwitchBtn" onClick={() => {
           setMode(m => {
             const next = m === 'daily' ? 'fixed' : 'daily';
             setCells([]);

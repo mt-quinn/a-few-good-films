@@ -278,13 +278,14 @@ body.noScroll {
   }
   .title { font-size: 16px; line-height: 1; }
   .title { order: 1; flex: 1 1 auto; }
-  .counterPanel { order: 2; font-size: 11px; padding: 4px 6px; margin-left: 6px; }
+  .modeSwitchBtn { order: 2; margin-left: auto; }
   .toolbarCenter { order: 3; width: 100%; }
   .searchWrap { width: 100%; }
   .searchBar { gap: 6px; }
   .searchInput { padding: 10px 12px; font-size: 16px; border-radius: 10px; }
   .clearBtn { padding: 8px 10px; font-size: 14px; }
   .howToBtn { order: 4; padding: 6px 8px; font-size: 12px; border-radius: 8px; border-color: #2b3242; }
+  .counterPanel { order: 5; font-size: 11px; padding: 4px 6px; margin-left: 6px; }
   .results { max-height: 40vh; }
   .grid { grid-template-columns: repeat(4, var(--cell-size, 120px)); grid-auto-rows: var(--cell-size, 120px); gap: 3px; }
   .cell { border-radius: 8px; }
