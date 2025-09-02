@@ -10,12 +10,11 @@ export async function searchMovies(query: string): Promise<TvdbMovie[]> {
   if (!data || !Array.isArray(data.items)) return [];
   
   return data.items.map((m: any) => {
-    const year = m.year ? `(${m.year})` : '';
     const rawTitle = m.name || m.translations?.eng || '';
     return {
       tvdbId: String(m.tvdb_id),
       rawTitle: rawTitle,
-      displayTitle: `${rawTitle} ${year}`.trim(),
+      displayTitle: `${rawTitle}`.trim(),
       year: m.year,
       thumb: m.image_url,
     };
