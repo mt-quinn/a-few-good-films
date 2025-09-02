@@ -123,7 +123,7 @@ function App() {
           setRerollCount(0);
           setFixedGuesses(0);
         } else {
-          const prompts = generateNPrompts(25);
+          const prompts = generateNPrompts(16);
           setCells(generateBoard(prompts as Prompt[]));
           setLogs([]);
           setGuessesLeft(Number.POSITIVE_INFINITY as unknown as number);
@@ -512,9 +512,9 @@ function App() {
       const paddingAndMargins = appPadTop + appPadBottom + toolbarMB + gridMT;
       const safety = 0;
       const availableH = vh - toolbarH - searchH - resultsH - paddingAndMargins - safety;
-      // Size cells to fit viewport for current mode
-      const cols = mode === 'daily' ? 4 : 5;
-      const rows = mode === 'daily' ? 4 : 5;
+      // Size cells to fit viewport (Fixed is now 4x4 like Daily)
+      const cols = 4;
+      const rows = 4;
       const maxByWidth = Math.floor((vw - gap * (cols - 1)) / cols);
       const maxByHeight = Math.floor((availableH - gap * (rows - 1)) / rows);
       const size = Math.max(64, Math.min(maxByWidth, maxByHeight));
