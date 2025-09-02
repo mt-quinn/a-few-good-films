@@ -194,10 +194,10 @@ body.noScroll {
 .tipVal {
   white-space: normal;
 }
-.tipVal .hl { color: #9ff2cd; font-weight: 700; }
+.tipVal .hl { color: #b5ffd9; font-weight: 800; text-shadow: 0 0 6px rgba(52, 211, 153, 0.55), 0 0 2px rgba(52, 211, 153, 0.75); }
 /* Ensure highlights also work in the title row */
-.tipFloating .hl { color: #9ff2cd; font-weight: 700; }
-.tipTitle .hl { color: #9ff2cd; font-weight: 700; }
+.tipFloating .hl { color: #b5ffd9; font-weight: 800; text-shadow: 0 0 6px rgba(52, 211, 153, 0.55), 0 0 2px rgba(52, 211, 153, 0.75); }
+.tipTitle .hl { color: #b5ffd9; font-weight: 800; text-shadow: 0 0 6px rgba(52, 211, 153, 0.55), 0 0 2px rgba(52, 211, 153, 0.75); }
 
 .tipTopSection {
   display: flex;
