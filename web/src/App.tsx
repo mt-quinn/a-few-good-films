@@ -48,6 +48,7 @@ function App() {
   const [hoveredTip, setHoveredTip] = useState<null | (LogEntry & { x: number; y: number; anchorLeft: number })>(null);
   const tipRef = useRef<HTMLDivElement | null>(null);
   const [tipPos, setTipPos] = useState<null | { left: number; top: number; width: number }>(null);
+  const [actorPreview, setActorPreview] = useState<null | { url: string; idx: number }>(null);
   const isTouchDevice = useMemo(() => {
     if (typeof window === 'undefined') return false;
     return (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
@@ -654,28 +655,25 @@ function App() {
                   key={idx}
                   className={`cell ${isClearing ? 'clearing' : ''} ${isActorHint ? 'actorHintCell' : ''} ${isDim ? 'dim' : ''}`}
                   style={{ width: cellSize, height: cellSize, backgroundImage: poster ? `url(${poster})` : undefined, backgroundSize: poster ? 'cover' : undefined, backgroundPosition: 'center' }}
+                  onMouseEnter={() => { if (!isTouch && isActorHint && hintImg) setActorPreview({ url: hintImg, idx }); }}
+                  onMouseLeave={() => { if (!isTouch && actorPreview && actorPreview.idx === idx) setActorPreview(null); }}
                   onClick={(e) => {
                     if (isActorHint && isTouch) {
                       e.stopPropagation();
-                      setDimmedActorCells(prev => {
-                        const next = { ...prev };
-                        const newVal = !prev[idx];
-                        next[idx] = newVal;
-                        // manage 3s timeout when turning on
-                        const tmap = dimTimeoutsRef.current || {};
-                        if (tmap[idx]) {
-                          window.clearTimeout(tmap[idx]);
-                          delete tmap[idx];
-                        }
-                        if (newVal) {
-                          tmap[idx] = window.setTimeout(() => {
-                            setDimmedActorCells(curr => ({ ...curr, [idx]: false }));
-                            delete dimTimeoutsRef.current[idx];
-                          }, 3000);
-                        }
-                        dimTimeoutsRef.current = tmap;
-                        return next;
-                      });
+                      // Always start (or restart) the timer immediately on tap
+                      const tmap = dimTimeoutsRef.current || {};
+                      if (tmap[idx]) {
+                        window.clearTimeout(tmap[idx]);
+                        delete tmap[idx];
+                      }
+                      if (hintImg) setActorPreview({ url: hintImg, idx });
+                      setDimmedActorCells(prev => ({ ...prev, [idx]: true }));
+                      tmap[idx] = window.setTimeout(() => {
+                        setDimmedActorCells(curr => ({ ...curr, [idx]: false }));
+                        setActorPreview(prev => (prev && prev.idx === idx ? null : prev));
+                        delete dimTimeoutsRef.current[idx];
+                      }, 3000);
+                      dimTimeoutsRef.current = tmap;
                     }
                   }}
                 >
@@ -838,6 +836,12 @@ function App() {
               return str;
             })()
           }</span></span></div>
+        </div>
+      )}
+
+      {actorPreview && (
+        <div className="actorPreviewOverlay" aria-hidden>
+          <div className="actorPreviewImg" style={{ backgroundImage: `url(${actorPreview.url})` }} />
         </div>
       )}
 
