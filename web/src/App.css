@@ -279,8 +279,8 @@ body.noScroll {
   }
   .title { font-size: 16px; line-height: 1; }
   .title { order: 1; flex: 0 1 auto; }
-  .modeSwitchBtn { order: 2; margin-left: auto; }
-  .modeSwitchBtn { flex: 0 0 auto; white-space: nowrap; }
+  /* Place mode switch exactly where counters were: top row, right side */
+  .modeSwitchBtn { order: 2; margin-left: auto; flex: 0 0 auto; white-space: nowrap; }
   .toolbarCenter { order: 3; width: 100%; }
   .searchWrap { width: 100%; }
   .searchBar { gap: 6px; }
