@@ -121,7 +121,7 @@ body {
 
 /* Play area layout */
 .playArea { display: grid; grid-template-columns: auto clamp(220px, 24vw, 300px); gap: 10px; align-items: start; margin: 14px auto 0; justify-content: center; }
-.boardWrap { overflow: visible; display: block; }
+.boardWrap { overflow: hidden; display: block; }
 .logPanel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); min-height: 100%; max-height: calc(100vh - 180px); display: flex; flex-direction: column; }
 .logHeader { padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 700; color: var(--muted); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .logBody { position: relative; overflow-y: auto; overflow-x: hidden; }
