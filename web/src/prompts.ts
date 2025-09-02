@@ -11,10 +11,10 @@ export interface Prompt {
 // --- Data Sources ---
 const DIRECTORS = [
   'Steven Spielberg', 'Martin Scorsese', 'Quentin Tarantino', 'Alfred Hitchcock',
-  'Stanley Kubrick', 'Christopher Nolan', 
+  'Stanley Kubrick', 'Christopher Nolan', 'Akira Kurosawa',
   'Spike Lee', 'Wes Anderson', 'David Fincher', 'Denis Villeneuve',
   'James Cameron', 'Peter Jackson', 'Ridley Scott', 'Tim Burton', 'Coen Brothers',
-  'The Wachowskis', 'Hayao Miyazaki',
+  'The Wachowskis', 'Hayao Miyazaki', 'Sofia Coppola', 'Greta Gerwig', 'Bong Joon-ho',
   'Guillermo del Toro', 'Jordan Peele', 'Taika Waititi', 'David Lynch',
   'J.J. Abrams', 'Robert Zemeckis', 'Jon Favreau', 'Sam Raimi', 'Clint Eastwood',
   'George Clooney', 'M Night Shyamalan', 'Russo Brothers', 'George Lucas',
@@ -319,4 +319,29 @@ export function generateSinglePrompt(existingPrompts: Prompt[], seed: string, re
   // 5. Pick a random prompt from that chosen category
   const randomIndex = Math.floor(rng() * chosenCategory.prompts.length);
   return chosenCategory.prompts[randomIndex];
+}
+
+// Build a prompt from a server-provided id/label when it isn't present in the local prompt catalog
+export function buildPromptFromServer(id: string, label: string): Prompt {
+  try {
+    if (/^director-/.test(id)) {
+      const name = label.replace(/^Directed by\s+/i, '').trim();
+      return directorPrompt(name);
+    }
+    if (/^actor-/.test(id)) {
+      const name = label.replace(/^Stars\s+/i, '').trim();
+      return actorPrompt(name);
+    }
+    if (/^genre-/.test(id)) {
+      const name = label.replace(/^Genre:\s+/i, '').trim();
+      return genrePrompt(name);
+    }
+    if (/^year-\d{4}s$/.test(id)) {
+      const decade = Number(id.match(/^year-(\d{4})s$/)![1]);
+      return decadePrompt(decade);
+    }
+    const s = staticPrompts.find(p => p.id === id);
+    if (s) return s;
+  } catch {}
+  return { id, label, test: () => false };
 }

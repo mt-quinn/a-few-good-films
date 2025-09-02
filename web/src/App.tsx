@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import './App.css'
 import { searchMovies, getMovieDetails, getDailyPrompts, getPersonByName, type PersonLookup } from './api'
-import { generatePrompts, generateSinglePrompt, allPossiblePrompts } from './prompts'
+import { generatePrompts, generateSinglePrompt, allPossiblePrompts, buildPromptFromServer } from './prompts'
 import type { Prompt } from './prompts';
 import type { Cell, TvdbMovieDetails, LogEntry, TvdbSearchItem } from './types'
 import { parseMoney } from './utils';
@@ -85,7 +85,10 @@ function App() {
       } else {
         // No saved state for today, fetch a new game
         const { seed, prompts } = await getDailyPrompts();
-        const hydratedPrompts = prompts.map((p: { id: string }) => promptsById.get(p.id));
+        const hydratedPrompts = prompts.map((p: { id: string; label: string }) => {
+          const found = promptsById.get(p.id);
+          return found || buildPromptFromServer(p.id, p.label);
+        });
         setCells(generateBoard(hydratedPrompts as Prompt[]));
         setLogs([]);
         setGuessesLeft(MAX_GUESSES);
