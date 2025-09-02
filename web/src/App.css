@@ -275,10 +275,12 @@ body.noScroll {
     margin-bottom: 6px;
     gap: 8px;
     flex-wrap: wrap;
+    justify-content: space-between;
   }
   .title { font-size: 16px; line-height: 1; }
-  .title { order: 1; flex: 1 1 auto; }
+  .title { order: 1; flex: 0 1 auto; }
   .modeSwitchBtn { order: 2; margin-left: auto; }
+  .modeSwitchBtn { flex: 0 0 auto; white-space: nowrap; }
   .toolbarCenter { order: 3; width: 100%; }
   .searchWrap { width: 100%; }
   .searchBar { gap: 6px; }
