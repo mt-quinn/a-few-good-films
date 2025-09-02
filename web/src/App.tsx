@@ -69,6 +69,12 @@ function App() {
   }, []);
   const [dailySeed, setDailySeed] = useState<string>('');
   const [rerollCount, setRerollCount] = useState<number>(0);
+  const totalCells = 16;
+  const remaining = useMemo(() => {
+    if (mode !== 'fixed') return null;
+    if (!cells || cells.length === 0) return totalCells;
+    return cells.filter(c => !c.filledBy).length;
+  }, [mode, cells]);
   const [showReset, setShowReset] = useState<boolean>(false);
 
   // Initial setup
@@ -662,7 +668,11 @@ function App() {
         </div>
         <div className="toolbarBottom">
           <div className="toolbarCounters">
-            <div className="counterPanel">Score: <strong>{score}</strong></div>
+            {mode === 'daily' ? (
+              <div className="counterPanel">Score: <strong>{score}</strong></div>
+            ) : (
+              <div className="counterPanel">Remaining: <strong>{remaining != null ? remaining : totalCells}</strong></div>
+            )}
             {mode === 'daily' ? (
               <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
             ) : (
@@ -752,7 +762,11 @@ function App() {
             <div className="gameOverOverlay">
               <div className="gameOverContent">
                 <h2>Game Over!</h2>
-                <p>Your final score is: <strong>{score}</strong></p>
+                {mode === 'daily' ? (
+                  <p>Your final score is: <strong>{score}</strong></p>
+                ) : (
+                  <p>Your final score is: <strong>{fixedGuesses}</strong> guesses</p>
+                )}
                 {sharedScore != null && (
                   <p>
                     {score === sharedScore && 'You matched the shared score.'}
