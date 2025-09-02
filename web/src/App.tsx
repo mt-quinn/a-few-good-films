@@ -488,6 +488,24 @@ function App() {
     };
   }, [results.length, logs.length, resultsPos, mode]);
 
+  // Desktop-only: lock page scrolling when the app fully fits within the viewport
+  useEffect(() => {
+    function applyScrollLock() {
+      if (!appRef.current) return;
+      if (isTouchDevice) {
+        document.body.classList.remove('noScroll');
+        return;
+      }
+      const rect = appRef.current.getBoundingClientRect();
+      const fits = rect.height <= window.innerHeight;
+      if (fits) document.body.classList.add('noScroll');
+      else document.body.classList.remove('noScroll');
+    }
+    applyScrollLock();
+    window.addEventListener('resize', applyScrollLock);
+    return () => window.removeEventListener('resize', applyScrollLock);
+  }, [isTouchDevice, mode, cellSize, cells.length, logs.length, showHowTo, showGameOver]);
+
   return (
     <div className="app" ref={appRef}>
       {(() => {
