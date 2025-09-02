@@ -803,7 +803,7 @@ function App() {
                 <div className="logCard">
                   <div className="logPosterWrap">
                     {entry.posterUrl && <img className="logPoster" src={entry.posterUrl} alt="" />}
-                    {entry.score && entry.score > 0 && <div className="logScoreBadge">+{entry.score}</div>}
+                    <div className="logScoreBadge">+{entry.score != null ? entry.score : 0}</div>
                   </div>
                   <div className="logTitle">{entry.title}{entry.year ? ` (${entry.year})` : ''}</div>
                 </div>

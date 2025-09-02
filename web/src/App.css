@@ -50,6 +50,8 @@ body.noScroll {
   font-weight: 600;
   transition: all 0.2s ease;
 }
+.debugBtn { background: #3b82f6; color: #fff; border: 0; padding: 6px 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.debugBtn:hover { filter: brightness(1.05); }
 .newGameBtn:hover {
   background-color: #444;
 }
