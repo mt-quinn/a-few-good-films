@@ -201,6 +201,31 @@ body.noScroll {
 .tipFloating .hl { color: #b5ffd9; font-weight: 800; text-shadow: 0 0 6px rgba(52, 211, 153, 0.55), 0 0 2px rgba(52, 211, 153, 0.75); }
 .tipTitle .hl { color: #b5ffd9; font-weight: 800; text-shadow: 0 0 6px rgba(52, 211, 153, 0.55), 0 0 2px rgba(52, 211, 153, 0.75); }
 
+/* Actor preview overlay (on-top popout) */
+.actorPreviewOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300000;
+  pointer-events: none; /* avoid breaking hover/tap targets underneath */
+}
+.actorPreviewImg {
+  width: min(80vw, 520px);
+  height: min(80vw, 520px);
+  background-size: cover;
+  background-position: center;
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.45);
+  transform: scale(1.02);
+  animation: previewIn 160ms ease-out both;
+}
+@keyframes previewIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1.02); }
+}
+
 .tipTopSection {
   display: flex;
   gap: 12px;
