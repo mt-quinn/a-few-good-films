@@ -107,8 +107,8 @@ body {
 
 .posterOverlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.0) 60%, rgba(0,0,0,0.6)); }
 
-/* Marathon mode: 5x5 grid when body has data-mode="marathon" */
-:root[data-mode="marathon"] .grid {
+/* Fixed mode: 5x5 grid when body has data-mode="fixed" */
+:root[data-mode="fixed"] .grid {
   grid-template-columns: repeat(5, var(--cell-size, 120px));
 }
 

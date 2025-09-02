@@ -8,7 +8,7 @@ import type { Cell, TvdbMovieDetails, LogEntry, TvdbSearchItem } from './types'
 import { parseMoney } from './utils';
 
 const MAX_GUESSES = 10;
-type GameMode = 'daily' | 'marathon';
+type GameMode = 'daily' | 'fixed';
 
 // Create a map of all possible prompts by their ID for easy look-up
 const promptsById = new Map<string, Prompt>();
@@ -22,7 +22,7 @@ function getDailyKey(mode: GameMode) {
   const now = new Date();
   // Use UTC date to ensure players in different timezones get the same puzzle on the same day
   const base = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
-  return mode === 'daily' ? `daily-game-${base}` : `marathon-${base}`;
+  return mode === 'daily' ? `daily-game-${base}` : `fixed-${base}`;
 }
 
 
@@ -38,7 +38,7 @@ function App() {
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'gameOver'>('playing');
   const [mode, setMode] = useState<GameMode>('daily');
-  const [marathonGuesses, setMarathonGuesses] = useState<number>(0);
+  const [fixedGuesses, setFixedGuesses] = useState<number>(0);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
@@ -81,7 +81,7 @@ function App() {
       const savedState = localStorage.getItem(dailyKey);
 
       if (savedState) {
-        const { cells, logs, guessesLeft, score, gameState, dailySeed, rerollCount, mode: savedMode, marathonGuesses } = JSON.parse(savedState);
+        const { cells, logs, guessesLeft, score, gameState, dailySeed, rerollCount, mode: savedMode, marathonGuesses, fixedGuesses } = JSON.parse(savedState);
         // We need to re-hydrate the prompts with their `test` functions
         const hydratedCells = cells.map((cell: Cell) => ({
           ...cell,
@@ -95,7 +95,7 @@ function App() {
         setDailySeed(dailySeed || '');
         setRerollCount(rerollCount || 0);
         setMode(savedMode || 'daily');
-        setMarathonGuesses(marathonGuesses || 0);
+        setFixedGuesses((fixedGuesses ?? marathonGuesses) || 0);
       } else {
         // New state for this mode
         if (mode === 'daily') {
@@ -112,7 +112,7 @@ function App() {
           setDebugMode(false);
           setDailySeed(seed || '');
           setRerollCount(0);
-          setMarathonGuesses(0);
+          setFixedGuesses(0);
         } else {
           const prompts = generateNPrompts(25);
           setCells(generateBoard(prompts as Prompt[]));
@@ -123,7 +123,7 @@ function App() {
           setDebugMode(false);
           setDailySeed('');
           setRerollCount(0);
-          setMarathonGuesses(0);
+          setFixedGuesses(0);
         }
       }
     };
@@ -144,10 +144,10 @@ function App() {
       dailySeed,
       rerollCount,
       mode,
-      marathonGuesses,
+      fixedGuesses,
     };
     localStorage.setItem(dailyKey, JSON.stringify(stateToSave));
-  }, [cells, logs, guessesLeft, score, gameState, debugMode, dailySeed, rerollCount, mode, marathonGuesses]);
+  }, [cells, logs, guessesLeft, score, gameState, debugMode, dailySeed, rerollCount, mode, fixedGuesses]);
 
   // Show How-To on first visit
   useEffect(() => {
@@ -213,7 +213,7 @@ function App() {
       // A correct guess was made, keep UI locked for animations
       setScore(s => s + guessScore);
       if (mode === 'daily') setGuessesLeft(n => n - 1);
-      if (mode === 'marathon') setMarathonGuesses(n => n + 1);
+      if (mode === 'fixed') setFixedGuesses(n => n + 1);
       setCells(nextCells);
       
       // Append to log
@@ -527,15 +527,15 @@ function App() {
         {mode === 'daily' ? (
           <div className="counterPanel">Guesses Left: <strong>{guessesLeft}</strong></div>
         ) : (
-          <div className="counterPanel">Guesses Used: <strong>{marathonGuesses}</strong></div>
+          <div className="counterPanel">Guesses Used: <strong>{fixedGuesses}</strong></div>
         )}
         <button className="howToBtn" onClick={() => {
           setMode(m => {
-            const next = m === 'daily' ? 'marathon' : 'daily';
+            const next = m === 'daily' ? 'fixed' : 'daily';
             setCells([]);
             return next;
           });
-        }}>{mode === 'daily' ? 'Switch to Marathon (5x5)' : 'Switch to Daily (4x4)'}</button>
+        }}>{mode === 'daily' ? 'Switch to Fixed (5x5)' : 'Switch to Daily (4x4)'}</button>
         <button className="howToBtn" onClick={() => setShowHowTo(true)}>HOW TO PLAY</button>
         {gameState === 'gameOver' && !showGameOver && (
           <button className="howToBtn" onClick={() => setShowGameOver(true)}>VIEW SUMMARY</button>
@@ -729,9 +729,8 @@ function App() {
         <div className="overlayModal" role="dialog" aria-modal="true">
           <div className="modalCard">
             <h3>How to Play</h3>
-            <p>
-              You have ten guesses to check off as many boxes as possible! Checked boxes will be replaced with new prompts. Every box is worth 1 point, and one movie can check multiple boxes.
-            </p>
+            <p><strong>Daily (4x4):</strong> You have 10 guesses to check off as many boxes as possible. Checked boxes are replaced with new prompts. Each box is worth 1 point, and one movie can satisfy multiple prompts.</p>
+            <p><strong>Fixed (5x5):</strong> A 5x5 grid that does not refresh when filled. There’s no guess limit; the goal is to fill all 25 cells in as few guesses as possible.</p>
             <div className="modalActions">
               <button className="okBtn" onClick={() => { try { localStorage.setItem('afgf-howto-shown-v1', '1'); } catch {} setShowHowTo(false); }}>OK</button>
             </div>
