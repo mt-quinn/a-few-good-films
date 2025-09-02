@@ -203,6 +203,15 @@ router.get('/person', async (req, res) => {
     const name = (req.query.name || '').toString().trim();
     if (!name) return res.json({ name: '', imageUrl: null, id: null });
 
+    // Special-case fixups for ambiguous names
+    const canonical = name.toLowerCase();
+    const overrides = {
+      'will smith': 'https://images.mubicdn.net/images/cast_member/16515/cache-4006-1606461441/image-w856.jpg',
+    };
+    if (overrides[canonical]) {
+      return res.json({ name, imageUrl: overrides[canonical], id: null });
+    }
+
     if (!IS_VERCEL && db) {
       const cached = db.prepare('SELECT json FROM tvdb_person_cache WHERE name=?').get(name);
       if (cached) {

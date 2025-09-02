@@ -39,6 +39,7 @@ function App() {
   const [gameState, setGameState] = useState<'playing' | 'gameOver'>('playing');
   const [mode, setMode] = useState<GameMode>('daily');
   const [fixedGuesses, setFixedGuesses] = useState<number>(0);
+  const [hydrating, setHydrating] = useState<boolean>(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
@@ -77,6 +78,7 @@ function App() {
 
   useEffect(() => {
     const startDailyGame = async () => {
+      setHydrating(true);
       const dailyKey = getDailyKey(mode);
       const savedState = localStorage.getItem(dailyKey);
 
@@ -126,6 +128,7 @@ function App() {
           setFixedGuesses(0);
         }
       }
+      setHydrating(false);
     };
 
     startDailyGame();
@@ -133,7 +136,7 @@ function App() {
 
   // Save game state to localStorage whenever it changes
   useEffect(() => {
-    if (cells.length === 0 || debugMode) return; // Don't save empty initial state or debug sessions
+    if (cells.length === 0 || debugMode || hydrating) return; // Don't save empty initial state, debug, or during hydration
     const dailyKey = getDailyKey(mode);
     const stateToSave = {
       cells,
@@ -296,6 +299,7 @@ function App() {
   }, [cells, logs, dailySeed, rerollCount]);
 
   useEffect(() => {
+    if (hydrating) return;
     if (mode === 'daily') {
       if (guessesLeft <= 0 && gameState === 'playing') {
         setGameState('gameOver');
@@ -307,7 +311,7 @@ function App() {
         setShowGameOver(true);
       }
     }
-  }, [guessesLeft, gameState, mode, cells]);
+  }, [guessesLeft, gameState, mode, cells, hydrating]);
 
   // Keep tooltip within viewport by measuring after render
   useLayoutEffect(() => {
