@@ -34,6 +34,9 @@ body.noScroll {
 .shareNotice { background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.4); color: #aaf1d2; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: var(--shadow); }
 
 .toolbar { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; }
+.toolbarTop { display: flex; align-items: center; gap: 10px; width: 100%; }
+.toolbarBottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; }
+.toolbarActions { display: flex; gap: 8px; align-items: center; }
 .toolbarCenter { display: flex; justify-content: center; }
 .title { font-size: clamp(18px, 2.2vw, 22px); font-weight: 700; letter-spacing: 0.2px; margin: 0 8px 0 0; }
 .spacer { flex: 1; }
@@ -278,16 +281,17 @@ body.noScroll {
     justify-content: space-between;
   }
   .title { font-size: 16px; line-height: 1; }
-  .title { order: 1; flex: 0 1 auto; }
-  /* Place mode switch exactly where counters were: top row, right side */
-  .modeSwitchBtn { order: 2; margin-left: auto; flex: 0 0 auto; white-space: nowrap; }
-  .toolbarCenter { order: 3; width: 100%; }
-  .toolbarCounters { order: 4; display: flex; gap: 8px; align-items: center; }
+  .toolbarTop { order: 1; width: 100%; }
+  .toolbarTop .title { flex: 1; }
+  .toolbarTop .modeSwitchBtn { margin-left: auto; }
+  .toolbarCenter { order: 2; width: 100%; }
+  .toolbarCounters { order: 3; display: flex; gap: 8px; align-items: center; }
+  .toolbarBottom { order: 4; width: 100%; }
   .searchWrap { width: 100%; }
   .searchBar { gap: 6px; }
   .searchInput { padding: 10px 12px; font-size: 16px; border-radius: 10px; }
   .clearBtn { padding: 8px 10px; font-size: 14px; }
-  .howToBtn { order: 5; padding: 6px 8px; font-size: 12px; border-radius: 8px; border-color: #2b3242; }
+  .howToBtn { padding: 6px 8px; font-size: 12px; border-radius: 8px; border-color: #2b3242; }
   .counterPanel { font-size: 11px; padding: 4px 6px; margin-left: 0; }
   .results { max-height: 40vh; }
   .grid { grid-template-columns: repeat(4, var(--cell-size, 120px)); grid-auto-rows: var(--cell-size, 120px); gap: 3px; }
