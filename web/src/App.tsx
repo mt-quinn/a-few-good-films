@@ -413,7 +413,7 @@ function App() {
     }
   }, [results, submitting, query, applyMovie, gameState]);
 
-  // Dynamically size cells to fit 5 rows within viewport
+  // Dynamically size cells to fit rows/cols within viewport
   useEffect(() => {
     function recalc() {
       const grid = gridRef.current;
@@ -446,9 +446,9 @@ function App() {
       const paddingAndMargins = appPadTop + appPadBottom + toolbarMB + gridMT;
       const safety = 0;
       const availableH = vh - toolbarH - searchH - resultsH - paddingAndMargins - safety;
-      // Always render a 4x4 board; size cells to fit viewport
-      const cols = 4;
-      const rows = 4;
+      // Size cells to fit viewport for current mode
+      const cols = mode === 'daily' ? 4 : 5;
+      const rows = mode === 'daily' ? 4 : 5;
       const maxByWidth = Math.floor((vw - gap * (cols - 1)) / cols);
       const maxByHeight = Math.floor((availableH - gap * (rows - 1)) / rows);
       const size = Math.max(64, Math.min(maxByWidth, maxByHeight));
@@ -476,7 +476,7 @@ function App() {
       window.removeEventListener('scroll', recalcResults, true);
       window.removeEventListener('resize', recalcResults);
     };
-  }, [results.length, logs.length, resultsPos]);
+  }, [results.length, logs.length, resultsPos, mode]);
 
   return (
     <div className="app" ref={appRef}>
