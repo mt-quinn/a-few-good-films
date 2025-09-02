@@ -86,6 +86,35 @@ function App() {
 
       if (savedState) {
         const { cells, logs, guessesLeft, score, gameState, dailySeed, rerollCount, mode: savedMode, marathonGuesses, fixedGuesses } = JSON.parse(savedState);
+        // Migration: if Fixed mode save has 25 cells from old 5x5, reset to 16
+        if ((savedMode || mode) === 'fixed' && Array.isArray(cells) && cells.length > 16) {
+          const prompts = generateNPrompts(16);
+          setCells(generateBoard(prompts as Prompt[]));
+          setLogs([]);
+          setGuessesLeft(Number.POSITIVE_INFINITY as unknown as number);
+          setScore(0);
+          setGameState('playing');
+          setDebugMode(false);
+          setDailySeed('');
+          setRerollCount(0);
+          setFixedGuesses(0);
+          // overwrite saved state to avoid rehydrating 25 again
+          const dailyKey = getDailyKey('fixed');
+          const stateToSave = {
+            cells: generateBoard(prompts as Prompt[]),
+            logs: [],
+            guessesLeft: Number.POSITIVE_INFINITY,
+            score: 0,
+            gameState: 'playing' as const,
+            dailySeed: '',
+            rerollCount: 0,
+            mode: 'fixed' as const,
+            fixedGuesses: 0,
+          };
+          try { localStorage.setItem(dailyKey, JSON.stringify(stateToSave)); } catch {}
+          setHydrating(false);
+          return;
+        }
         // We need to re-hydrate the prompts with their `test` functions
         const hydratedCells = cells.map((cell: Cell) => ({
           ...cell,
