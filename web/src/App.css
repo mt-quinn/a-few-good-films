@@ -195,6 +195,9 @@ body.noScroll {
   white-space: normal;
 }
 .tipVal .hl { color: #9ff2cd; font-weight: 700; }
+/* Ensure highlights also work in the title row */
+.tipFloating .hl { color: #9ff2cd; font-weight: 700; }
+.tipTitle .hl { color: #9ff2cd; font-weight: 700; }
 
 .tipTopSection {
   display: flex;
