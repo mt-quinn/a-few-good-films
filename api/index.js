@@ -174,6 +174,29 @@ router.get('/tvdb/movies/:id/people', async (req, res) => {
   }
 });
 
+// Simple image proxy to enable CORS-safe canvas usage for TVDB artworks
+router.get('/proxy-image', async (req, res) => {
+  try {
+    const url = (req.query.url || '').toString();
+    if (!url) return res.status(400).json({ error: 'missing_url' });
+    let u;
+    try { u = new URL(url); } catch { return res.status(400).json({ error: 'invalid_url' }); }
+    // Allowlist hosts
+    const allowedHosts = new Set([
+      'artworks.thetvdb.com'
+    ]);
+    if (!allowedHosts.has(u.hostname)) return res.status(403).json({ error: 'forbidden_host' });
+    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 15000 });
+    const type = r.headers['content-type'] || 'image/jpeg';
+    res.setHeader('Content-Type', type);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.send(Buffer.from(r.data));
+  } catch (e) {
+    return res.status(502).json({ error: 'fetch_failed' });
+  }
+});
+
 // Lookup a person's primary image by name, with caching in dev
 router.get('/person', async (req, res) => {
   try {
