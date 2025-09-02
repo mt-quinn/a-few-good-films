@@ -48,7 +48,7 @@ function App() {
   const [hoveredTip, setHoveredTip] = useState<null | (LogEntry & { x: number; y: number; anchorLeft: number })>(null);
   const tipRef = useRef<HTMLDivElement | null>(null);
   const [tipPos, setTipPos] = useState<null | { left: number; top: number; width: number }>(null);
-  const [actorPreview, setActorPreview] = useState<null | { url: string; idx: number }>(null);
+  const [actorPreview, setActorPreview] = useState<null | { url: string; idx: number; rect: { left: number; top: number; width: number; height: number } }>(null);
   const isTouchDevice = useMemo(() => {
     if (typeof window === 'undefined') return false;
     return (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
@@ -655,7 +655,7 @@ function App() {
                   key={idx}
                   className={`cell ${isClearing ? 'clearing' : ''} ${isActorHint ? 'actorHintCell' : ''} ${isDim ? 'dim' : ''}`}
                   style={{ width: cellSize, height: cellSize, backgroundImage: poster ? `url(${poster})` : undefined, backgroundSize: poster ? 'cover' : undefined, backgroundPosition: 'center' }}
-                  onMouseEnter={() => { if (!isTouch && isActorHint && hintImg) setActorPreview({ url: hintImg, idx }); }}
+                  onMouseEnter={(e) => { if (!isTouch && isActorHint && hintImg) { const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect(); setActorPreview({ url: hintImg, idx, rect: { left: r.left, top: r.top, width: r.width, height: r.height } }); } }}
                   onMouseLeave={() => { if (!isTouch && actorPreview && actorPreview.idx === idx) setActorPreview(null); }}
                   onClick={(e) => {
                     if (isActorHint && isTouch) {
@@ -666,7 +666,10 @@ function App() {
                         window.clearTimeout(tmap[idx]);
                         delete tmap[idx];
                       }
-                      if (hintImg) setActorPreview({ url: hintImg, idx });
+                      if (hintImg) {
+                        const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                        setActorPreview({ url: hintImg, idx, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+                      }
                       setDimmedActorCells(prev => ({ ...prev, [idx]: true }));
                       tmap[idx] = window.setTimeout(() => {
                         setDimmedActorCells(curr => ({ ...curr, [idx]: false }));
@@ -839,11 +842,18 @@ function App() {
         </div>
       )}
 
-      {actorPreview && (
-        <div className="actorPreviewOverlay" aria-hidden>
-          <div className="actorPreviewImg" style={{ backgroundImage: `url(${actorPreview.url})` }} />
-        </div>
-      )}
+      {actorPreview && (() => {
+        const scale = 1.2;
+        const ow = actorPreview.rect.width * scale;
+        const oh = actorPreview.rect.height * scale;
+        const left = actorPreview.rect.left + (actorPreview.rect.width / 2) - (ow / 2);
+        const top = actorPreview.rect.top + (actorPreview.rect.height / 2) - (oh / 2);
+        return (
+          <div className="actorPreviewOverlay" aria-hidden>
+            <div className="actorPreviewImg" style={{ left, top, width: ow, height: oh, position: 'fixed', backgroundImage: `url(${actorPreview.url})`, filter: 'grayscale(100%) brightness(0.55)' }} />
+          </div>
+        );
+      })()}
 
       {showHowTo && (
         <div className="overlayModal" role="dialog" aria-modal="true">
