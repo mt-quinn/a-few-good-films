@@ -60,8 +60,20 @@ export type LogEntry = {
   score?: number;
   highlight?: {
     actors?: string[];
+    directors?: string[];
+    genres?: string[];
+    title?: boolean;
+    runtimeShort?: boolean;
+    runtimeEpic?: boolean;
     budgetUnder1m?: boolean;
+    budgetOver100m?: boolean;
+    boxOffice10x?: boolean;
+    boxOfficeFlop?: boolean;
+    languageNonEnglish?: boolean;
+    awards?: boolean;
     decade?: number; // e.g. 1990 for 1990s
+    yearBefore?: number; // highlight year when before
+    yearAfter?: number;  // highlight year when after
   };
 };
 

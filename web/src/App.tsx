@@ -227,6 +227,44 @@ function App() {
             if (dec) {
               highlight.decade = Number(dec[1]);
             }
+            if (pid === 'budget-over-100m') highlight.budgetOver100m = true;
+            if (pid === 'box-office-10x') highlight.boxOffice10x = true;
+            if (pid === 'box-office-flop') highlight.boxOfficeFlop = true;
+            if (pid === 'lang-non-english') highlight.languageNonEnglish = true;
+            if (pid === 'runtime-short') highlight.runtimeShort = true;
+            if (pid === 'runtime-epic') highlight.runtimeEpic = true;
+            if (pid === 'year-before-2000') highlight.yearBefore = 2000;
+            if (pid === 'year-after-2000') highlight.yearAfter = 2000;
+            if (pid === 'year-after-2020') highlight.yearAfter = 2020;
+            if (pid === 'year-before-1970') highlight.yearBefore = 1970;
+            if (pid === 'written-and-directed-same') {
+              const dirs = (details.people || []).filter(p => /director/i.test(p.peopleType || p.type || '')).map(p => p.name);
+              highlight.directors = Array.from(new Set([...(highlight.directors || []), ...dirs]));
+            }
+            if (/^director-/.test(pid)) {
+              const dirLabel = cell.prompt.label.replace(/^Directed by\s+/i, '');
+              // Handle team prompts
+              const teamMap: Record<string, string[]> = {
+                'Coen Brothers': ['Joel Coen', 'Ethan Coen'],
+                'Russo Brothers': ['Anthony Russo', 'Joe Russo'],
+                'The Wachowskis': ['Lana Wachowski', 'Lilly Wachowski'],
+              };
+              const names = teamMap[dirLabel] || [dirLabel];
+              highlight.directors = Array.from(new Set([...(highlight.directors || []), ...names]));
+            }
+            if (/^genre-/.test(pid)) {
+              const g = cell.prompt.label.replace(/^Genre:\s+/i, '');
+              highlight.genres = Array.from(new Set([...(highlight.genres || []), g]));
+            }
+            if (/^(title-|starts-the|one-word|has-number|has-color|has-colon)/.test(pid)) {
+              highlight.title = true;
+            }
+            if (pid === 'title-alliterative' || pid === 'title-long-5') {
+              highlight.title = true;
+            }
+            if (/^award-/.test(pid)) {
+              highlight.awards = true;
+            }
           } catch {}
           return { ...cell, filledBy: { id: tvdbId, title, posterUrl: (details as TvdbMovieDetails).posterUrl } };
         }
@@ -748,9 +786,23 @@ function App() {
           </div>
 
           <div className="tipTitle">{hoveredTip.title}{hoveredTip.year ? ` (${hoveredTip.year})` : ''}</div>
-          <div className="tipRow"><span className="tipKey">Genres</span><span className="tipVal">{hoveredTip.genres && hoveredTip.genres.length > 0 ? hoveredTip.genres.join(', ') : 'None'}</span></div>
+          <div className="tipRow"><span className="tipKey">Genres</span><span className="tipVal">{
+            hoveredTip.genres && hoveredTip.genres.length > 0 ? (
+              hoveredTip.genres.map((g, i) => {
+                const isHl = (hoveredTip.highlight?.genres || []).some(a => new RegExp(a.replace(/[-/\\^$*+?.()|[\]{}]/g, '.'), 'i').test(g));
+                return <span key={i} className={isHl ? 'hl' : ''}>{g}{i < hoveredTip.genres!.length - 1 ? ', ' : ''}</span>;
+              })
+            ) : 'None'
+          }</span></div>
           <div className="tipRow"><span className="tipKey">Runtime</span><span className="tipVal">{hoveredTip.runtime != null ? `${hoveredTip.runtime} min` : 'None'}</span></div>
-          <div className="tipRow"><span className="tipKey">Director</span><span className="tipVal">{hoveredTip.directors && hoveredTip.directors.length > 0 ? hoveredTip.directors.join(', ') : 'None'}</span></div>
+          <div className="tipRow"><span className="tipKey">Director</span><span className="tipVal">{
+            hoveredTip.directors && hoveredTip.directors.length > 0 ? (
+              hoveredTip.directors.map((d, i) => {
+                const isHl = (hoveredTip.highlight?.directors || []).some(a => new RegExp(a.replace(/[-/\\^$*+?.()|[\]{}]/g, '.'), 'i').test(d));
+                return <span key={i} className={isHl ? 'hl' : ''}>{d}{i < hoveredTip.directors!.length - 1 ? ', ' : ''}</span>;
+              })
+            ) : 'None'
+          }</span></div>
           <div className="tipRow"><span className="tipKey">Stars</span><span className="tipVal">{
             hoveredTip.stars && hoveredTip.stars.length > 0 ? (
               hoveredTip.stars.map((s, i) => {
@@ -760,8 +812,24 @@ function App() {
             ) : 'None'
           }</span></div>
           <div className="tipRow"><span className="tipKey">Language</span><span className="tipVal">{hoveredTip.language ? hoveredTip.language.toUpperCase() : 'N/A'}</span></div>
-          <div className="tipRow"><span className="tipKey">Budget</span><span className="tipVal">{hoveredTip.budget && hoveredTip.budget > 0 ? <span className={hoveredTip.highlight?.budgetUnder1m ? 'hl' : ''}>{`$${hoveredTip.budget.toLocaleString()}`}</span> : 'None'}</span></div>
-          <div className="tipRow"><span className="tipKey">Box Office</span><span className="tipVal">{hoveredTip.boxOffice && hoveredTip.boxOffice > 0 ? `$${hoveredTip.boxOffice.toLocaleString()}` : 'None'}</span></div>
+          <div className="tipRow"><span className="tipKey">Budget</span><span className="tipVal">{hoveredTip.budget && hoveredTip.budget > 0 ? <span className={hoveredTip.highlight?.budgetUnder1m || hoveredTip.highlight?.budgetOver100m ? 'hl' : ''}>{`$${hoveredTip.budget.toLocaleString()}`}</span> : 'None'}</span></div>
+          <div className="tipRow"><span className="tipKey">Box Office</span><span className="tipVal">{hoveredTip.boxOffice && hoveredTip.boxOffice > 0 ? <span className={hoveredTip.highlight?.boxOffice10x || hoveredTip.highlight?.boxOfficeFlop ? 'hl' : ''}>{`$${hoveredTip.boxOffice.toLocaleString()}`}</span> : 'None'}</span></div>
+          {hoveredTip.highlight?.title ? <div className="tipRow"><span className="tipKey">Title</span><span className="tipVal"><span className="hl">Matched</span></span></div> : null}
+          {hoveredTip.highlight?.runtimeShort ? <div className="tipRow"><span className="tipKey">Runtime</span><span className="tipVal"><span className="hl">Short</span></span></div> : null}
+          {hoveredTip.highlight?.runtimeEpic ? <div className="tipRow"><span className="tipKey">Runtime</span><span className="tipVal"><span className="hl">Epic</span></span></div> : null}
+          {hoveredTip.highlight?.languageNonEnglish ? <div className="tipRow"><span className="tipKey">Language</span><span className="tipVal"><span className="hl">Non-English</span></span></div> : null}
+          {hoveredTip.highlight?.awards ? <div className="tipRow"><span className="tipKey">Awards</span><span className="tipVal"><span className="hl">Matched</span></span></div> : null}
+          {(() => {
+            const y = hoveredTip.year ? Number(String(hoveredTip.year).slice(0,4)) : NaN;
+            if (!Number.isFinite(y)) return null;
+            if (hoveredTip.highlight?.yearBefore && y < hoveredTip.highlight.yearBefore) {
+              return <div className="tipRow"><span className="tipKey">Year</span><span className="tipVal"><span className="hl">Before {hoveredTip.highlight.yearBefore}</span></span></div>;
+            }
+            if (hoveredTip.highlight?.yearAfter && y > hoveredTip.highlight.yearAfter) {
+              return <div className="tipRow"><span className="tipKey">Year</span><span className="tipVal"><span className="hl">After {hoveredTip.highlight.yearAfter}</span></span></div>;
+            }
+            return null;
+          })()}
           {(() => {
             const dec = hoveredTip.highlight?.decade;
             if (!dec || !hoveredTip.year) return null;
