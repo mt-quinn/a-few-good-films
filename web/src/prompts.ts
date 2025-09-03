@@ -194,7 +194,8 @@ const staticPrompts: Prompt[] = [
     return numberRegex.test(title);
   } },
   { id: 'has-color', label: 'Title contains a color', test: (_, title) => {
-    const rx = new RegExp(`\\b(${COLORS.join('|')})\\b`, 'i');
+    // Allow plural forms (simple trailing 's') e.g., Reds, Blues, Whites
+    const rx = new RegExp(`\\b(?:${COLORS.join('|')})(?:s)?\\b`, 'i');
     return rx.test(title);
   } },
   { id: 'has-colon', label: 'Has a subtitle (colon)', test: (_, title) => /:/.test(title) },
