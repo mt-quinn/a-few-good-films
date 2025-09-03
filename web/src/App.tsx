@@ -927,6 +927,16 @@ function App() {
             <h3>How to Play</h3>
             <p><strong>Daily:</strong> You have 10 guesses to check off as many boxes as possible. Checked boxes are replaced with new prompts. Each box is worth 1 point, and one movie can satisfy multiple prompts.</p>
             <p><strong>Fixed:</strong> Prompts do not refresh when filled. There’s no guess limit; the goal is to fill all boxes in as few guesses as possible.</p>
+            <a
+              className="tvdbAttrib"
+              href="https://www.thetvdb.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TheTVDB attribution"
+            >
+              <img src={new URL('./assets/tvdb-logo.svg', import.meta.url).toString()} alt="TheTVDB" className="tvdbLogo" />
+              <span className="tvdbText">Metadata provided by TheTVDB. Please consider adding missing information or subscribing.</span>
+            </a>
             <div className="modalActions">
               <button className="okBtn" onClick={() => { try { localStorage.setItem('afgf-howto-shown-v1', '1'); } catch {} setShowHowTo(false); }}>OK</button>
             </div>

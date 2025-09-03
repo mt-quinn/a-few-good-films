@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="48" viewBox="0 0 120 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TheTVDB logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#33d28f"/>
+      <stop offset="1" stop-color="#2bbd80"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" rx="8" ry="8" width="44" height="44" fill="url(#g)" stroke="#1a1f1f" stroke-width="2"/>
+  <g fill="#0f1a1a" opacity="0.12">
+    <rect x="2" y="30" width="44" height="16" rx="8"/>
+  </g>
+  <g fill="#ffffff" transform="translate(8,9)">
+    <path d="M6 8h-4V4h12v4H10v20H6V8z"/>
+    <path d="M19 4h4l5 10l5-10h4v24h-4V14l-5 9l-5-9v14h-4V4z"/>
+  </g>
+  <g fill="#bdfde0" transform="translate(52,10)">
+    <path d="M6 4h6c6 0 10 4 10 10s-4 10-10 10H6V4zm6 16c4 0 6-2.6 6-6s-2-6-6-6h-2v12h2z"/>
+    <path d="M27 4h6c6 0 10 4 10 10s-4 10-10 10h-6V4zm6 16c4 0 6-2.6 6-6s-2-6-6-6h-2v12h2z"/>
+  </g>
+</svg>
+
+
