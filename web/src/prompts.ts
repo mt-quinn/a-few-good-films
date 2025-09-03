@@ -206,9 +206,13 @@ const staticPrompts: Prompt[] = [
   
   // People
   { id: 'written-and-directed-same', label: 'Written & Directed by same person', test: (m) => {
-      const dirs = new Set((m.people||[]).filter(p => /director/i.test(p.peopleType|| p.type || '')).map(p => p.name.toLowerCase()));
-      if (dirs.size === 0) return false;
-      const wrs = new Set((m.people||[]).filter(p => /writer/i.test(p.peopleType|| p.type || '')).map(p => p.name.toLowerCase()));
+      const dirNames = (m.people||[]).filter(p => /director/i.test(p.peopleType|| p.type || ''))
+        .map(p => (p.name || '').toLowerCase().trim()).filter(Boolean);
+      const writerNames = (m.people||[]).filter(p => /writer/i.test(p.peopleType|| p.type || ''))
+        .map(p => (p.name || '').toLowerCase().trim()).filter(Boolean);
+      const dirs = new Set(dirNames);
+      const wrs = new Set(writerNames);
+      if (dirs.size === 0 || wrs.size === 0) return false; // discard "none"/empty data cases
       for (const d of dirs) if (wrs.has(d)) return true;
       return false;
     }
@@ -218,17 +222,27 @@ const staticPrompts: Prompt[] = [
   { id: 'lang-non-english', label: 'Not in the English language', test: (m) => m.originalLanguage !== 'eng' },
 
   // Budget & Box Office
-  { id: 'budget-under-1m', label: 'Budget < $1 million', test: (m) => parseMoney(m.budget) < 1000000 },
-  { id: 'budget-over-100m', label: 'Budget > $100 million', test: (m) => parseMoney(m.budget) > 100000000 },
+  { id: 'budget-under-1m', label: 'Budget < $1 million', test: (m) => {
+    const budget = parseMoney(m.budget);
+    if (!Number.isFinite(budget) || budget <= 0) return false; // discard missing/none
+    return budget < 1000000;
+  } },
+  { id: 'budget-over-100m', label: 'Budget > $100 million', test: (m) => {
+    const budget = parseMoney(m.budget);
+    if (!Number.isFinite(budget) || budget <= 0) return false;
+    return budget > 100000000;
+  } },
   { id: 'box-office-10x', label: 'Grossed > 10x budget', test: (m) => {
     const budget = parseMoney(m.budget);
     const boxOffice = parseMoney(m.boxOffice);
-    return budget > 0 && boxOffice > (budget * 10);
+    if (!Number.isFinite(budget) || !Number.isFinite(boxOffice) || budget <= 0 || boxOffice <= 0) return false;
+    return boxOffice > (budget * 10);
   }},
   { id: 'box-office-flop', label: 'Grossed < 2x budget', test: (m) => {
     const budget = parseMoney(m.budget);
     const boxOffice = parseMoney(m.boxOffice);
-    return budget > 0 && boxOffice < (budget * 2);
+    if (!Number.isFinite(budget) || !Number.isFinite(boxOffice) || budget <= 0 || boxOffice <= 0) return false;
+    return boxOffice < (budget * 2);
   }},
   
   // Awards
