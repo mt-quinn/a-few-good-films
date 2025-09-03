@@ -422,7 +422,7 @@ body.noScroll {
 }
 .tvdbAttrib:hover { filter: none; }
 .tvdbLogo { width: 108px; height: auto; display: block; }
-.tvdbText { font-size: 14px; line-height: 1.35; color: #fff; }
+.tvdbText { font-size: 14px; line-height: 1.35; color: #bdfde0; }
 @media (max-width: 640px) {
   .tvdbLogo { width: 72px; }
   .tvdbText { font-size: 13px; }
