@@ -65,6 +65,16 @@ const GENRES = [
   'Western', 'Musical', 'War', 'History', 'Family', 'Sport'
 ];
 
+// Expanded set of color names for the title color clue
+const COLORS = [
+  'red','blue','green','black','white','gold','silver','pink','purple','brown','gray','grey','orange','yellow',
+  'chartreuse','cyan','magenta','beige','turquoise','teal','maroon','indigo','violet','crimson','scarlet','azure',
+  'ivory','cream','tan','burgundy','fuchsia','lilac','lavender','salmon','coral','amber','ochre','ocher','saffron',
+  'vermilion','cerulean','mauve','navy','olive','plum','slate','charcoal','emerald','ruby','sapphire','jade','peach',
+  'mint','mustard','khaki','auburn','aquamarine','amethyst','cobalt','copper','bronze','pearl','rose','rust','sand',
+  'sepia','taupe','terracotta','ultramarine','wine','eggplant'
+];
+
 const DECADES = [1970, 1980, 1990, 2000, 2010];
 
 // --- Prompt Generator Functions ---
@@ -183,7 +193,10 @@ const staticPrompts: Prompt[] = [
     const numberRegex = new RegExp(`\\d|\\b(${spelledOutNumbers})\\b|\\b(${romanNumerals})\\b`, 'i');
     return numberRegex.test(title);
   } },
-  { id: 'has-color', label: 'Title contains a color', test: (_, title) => /(red|blue|green|black|white|gold|silver|pink|purple|brown|gray|grey|orange|yellow)\b/i.test(title) },
+  { id: 'has-color', label: 'Title contains a color', test: (_, title) => {
+    const rx = new RegExp(`\\b(${COLORS.join('|')})\\b`, 'i');
+    return rx.test(title);
+  } },
   { id: 'has-colon', label: 'Has a subtitle (colon)', test: (_, title) => /:/.test(title) },
   
   // Runtime
