@@ -410,19 +410,19 @@ body.noScroll {
 .tvdbAttrib {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 14px;
+  gap: 12px;
   align-items: center;
   margin: 14px 0 10px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #2a353f;
-  background: #2f4a4e;
+  padding: 6px 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
   color: #bdfde0;
   text-decoration: none;
 }
-.tvdbAttrib:hover { filter: brightness(1.02); }
-.tvdbLogo { width: 96px; height: auto; display: block; }
-.tvdbText { font-size: 14px; line-height: 1.35; }
+.tvdbAttrib:hover { filter: none; }
+.tvdbLogo { width: 108px; height: auto; display: block; }
+.tvdbText { font-size: 14px; line-height: 1.35; color: #bdfde0; }
 @media (max-width: 640px) {
   .tvdbLogo { width: 72px; }
   .tvdbText { font-size: 13px; }

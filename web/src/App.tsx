@@ -934,7 +934,7 @@ function App() {
               rel="noopener noreferrer"
               aria-label="TheTVDB attribution"
             >
-              <img src={new URL('./assets/tvdb-logo.svg', import.meta.url).toString()} alt="TheTVDB" className="tvdbLogo" />
+              <img src="https://www.thetvdb.com/images/attribution/logo1.png" alt="TheTVDB" className="tvdbLogo" />
               <span className="tvdbText">Metadata provided by TheTVDB. Please consider adding missing information or subscribing.</span>
             </a>
             <div className="modalActions">
