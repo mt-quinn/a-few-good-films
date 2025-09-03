@@ -400,8 +400,8 @@ body.noScroll {
   padding: 18px 16px;
   box-shadow: var(--shadow);
 }
-.modalCard h3 { margin: 0 0 8px; }
-.modalCard p { margin: 0 0 12px; line-height: 1.4; color: var(--muted); }
+.modalCard h3 { margin: 0 0 8px; color: #fff; }
+.modalCard p { margin: 0 0 12px; line-height: 1.4; color: #fff; }
 .modalActions { display: flex; justify-content: flex-end; }
 .okBtn { background: var(--accent-blue); color: #fff; border: 0; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
 .okBtn:hover { filter: brightness(1.05); }
@@ -422,7 +422,7 @@ body.noScroll {
 }
 .tvdbAttrib:hover { filter: none; }
 .tvdbLogo { width: 108px; height: auto; display: block; }
-.tvdbText { font-size: 14px; line-height: 1.35; color: #bdfde0; }
+.tvdbText { font-size: 14px; line-height: 1.35; color: #fff; }
 @media (max-width: 640px) {
   .tvdbLogo { width: 72px; }
   .tvdbText { font-size: 13px; }
