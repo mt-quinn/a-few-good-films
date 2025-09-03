@@ -49,6 +49,7 @@ export type LogEntry = {
   runtime?: number;
   genres?: string[];
   directors?: string[];
+  writers?: string[];
   stars?: string[];
   posterUrl?: string;
   timestamp: number;
@@ -61,6 +62,7 @@ export type LogEntry = {
   highlight?: {
     actors?: string[];
     directors?: string[];
+    writers?: string[];
     genres?: string[];
     title?: boolean;
     runtimeShort?: boolean;

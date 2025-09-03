@@ -276,7 +276,25 @@ function App() {
             if (pid === 'year-before-1970') highlight.yearBefore = 1970;
             if (pid === 'written-and-directed-same') {
               const dirs = (details.people || []).filter(p => /director/i.test(p.peopleType || p.type || '')).map(p => p.name);
-              highlight.directors = Array.from(new Set([...(highlight.directors || []), ...dirs]));
+              const wrs = (details.people || []).filter(p => /writer/i.test(p.peopleType || p.type || '')).map(p => p.name);
+              const same = dirs.filter(d => wrs.some(w => new RegExp(d.replace(/[-\/\\^$*+?.()|[\]{}]/g, '.'), 'i').test(w)));
+              if (same.length > 0) {
+                highlight.directors = Array.from(new Set([...(highlight.directors || []), ...same]));
+                highlight.writers = Array.from(new Set([...(highlight.writers || []), ...same]));
+              }
+            }
+            if (pid === 'directed-and-starred-same') {
+              const dirs = (details.people || []).filter(p => /director/i.test(p.peopleType || p.type || '')).map(p => p.name);
+              const stars = (details.people || []).filter(p => /actor|actress/i.test(p.peopleType || p.type || '')).map(p => p.name);
+              const same = dirs.filter(d => stars.some(s => new RegExp(d.replace(/[-\/\\^$*+?.()|[\]{}]/g, '.'), 'i').test(s)));
+              if (same.length > 0) {
+                highlight.directors = Array.from(new Set([...(highlight.directors || []), ...same]));
+                highlight.actors = Array.from(new Set([...(highlight.actors || []), ...same]));
+              }
+            }
+            if (/^written-by-/.test(pid)) {
+              const writerName = cell.prompt.label.replace(/^Written by\s+/i, '');
+              highlight.writers = Array.from(new Set([...(highlight.writers || []), writerName]));
             }
             if (/^director-/.test(pid)) {
               const dirLabel = cell.prompt.label.replace(/^Directed by\s+/i, '');
@@ -327,6 +345,7 @@ function App() {
       })();
       const people = Array.isArray(details.people) ? details.people : [];
       const directors = people.filter(p => /director/i.test(p.peopleType || p.type || '')).map(p => p.name);
+      const writers = people.filter(p => /writer/i.test(p.peopleType || p.type || '')).map(p => p.name);
       const stars = people.filter(p => /actor|actress/i.test(p.peopleType || p.type || '')).map(p => p.name).slice(0, 6);
       
       setLogs(prev => [{
@@ -336,6 +355,7 @@ function App() {
         runtime: details.runtime,
         genres: details.genres,
         directors,
+        writers,
         stars,
         posterUrl: details.posterUrl,
         timestamp: Date.now(),
@@ -879,6 +899,14 @@ function App() {
               hoveredTip.directors.map((d, i) => {
                 const isHl = (hoveredTip.highlight?.directors || []).some(a => new RegExp(a.replace(/[-\/\\^$*+?.()|[\]{}]/g, '.'), 'i').test(d));
                 return <span key={i} className={isHl ? 'hl' : ''}>{d}{i < hoveredTip.directors!.length - 1 ? ', ' : ''}</span>;
+              })
+            ) : 'None'
+          }</span></div>
+          <div className="tipRow"><span className="tipKey">Writer</span><span className="tipVal">{
+            hoveredTip.writers && hoveredTip.writers.length > 0 ? (
+              hoveredTip.writers.map((w, i) => {
+                const isHl = (hoveredTip.highlight?.writers || []).some(a => new RegExp(a.replace(/[-\/\\^$*+?.()|[\]{}]/g, '.'), 'i').test(w));
+                return <span key={i} className={isHl ? 'hl' : ''}>{w}{i < hoveredTip.writers!.length - 1 ? ', ' : ''}</span>;
               })
             ) : 'None'
           }</span></div>

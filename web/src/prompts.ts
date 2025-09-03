@@ -217,6 +217,21 @@ const staticPrompts: Prompt[] = [
       return false;
     }
   },
+  { id: 'directed-and-starred-same', label: 'Directed & Starred by same person', test: (m) => {
+      const dirNames = (m.people||[]).filter(p => /director/i.test(p.peopleType|| p.type || ''))
+        .map(p => (p.name || '').toLowerCase().trim()).filter(Boolean);
+      const starNames = (m.people||[]).filter(p => /actor|actress/i.test(p.peopleType|| p.type || ''))
+        .map(p => (p.name || '').toLowerCase().trim()).filter(Boolean);
+      const dirs = new Set(dirNames);
+      const stars = new Set(starNames);
+      if (dirs.size === 0 || stars.size === 0) return false;
+      for (const d of dirs) if (stars.has(d)) return true;
+      return false;
+    }
+  },
+  { id: 'written-by-stephen-king', label: 'Written by Stephen King', test: (m) => (m.people||[]).some(p => /writer/i.test(p.peopleType|| p.type || '') && /\bStephen\s+King\b/i.test(p.name || '')) },
+  { id: 'written-by-william-shakespeare', label: 'Written by William Shakespeare', test: (m) => (m.people||[]).some(p => /writer/i.test(p.peopleType|| p.type || '') && /\bWilliam\s+Shakespeare\b/i.test(p.name || '')) },
+  { id: 'written-by-stan-lee', label: 'Written by Stan Lee', test: (m) => (m.people||[]).some(p => /writer/i.test(p.peopleType|| p.type || '') && /\bStan\s+Lee\b/i.test(p.name || '')) },
 
   // Language
   { id: 'lang-non-english', label: 'Not in the English language', test: (m) => m.originalLanguage !== 'eng' },
